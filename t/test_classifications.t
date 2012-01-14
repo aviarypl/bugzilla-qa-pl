@@ -1,6 +1,7 @@
 use strict;
 use warnings;
 use lib qw(lib);
+use utf8;
 
 use Test::More "no_plan";
 
@@ -8,125 +9,128 @@ use QA::Util;
 
 my ($sel, $config) = get_selenium();
 
-# Enable classifications
+# Włączanie kategorii
 
 log_in($sel, $config, 'admin');
-set_parameters($sel, { "Bug Fields" => {"useclassification-on" => undef} });
+set_parameters($sel, { "Pola błędu" => {"useclassification-on" => undef} });
 
-# Create a new classification.
+# Dodawanie nowej kategorii
 
 go_to_admin($sel);
-$sel->click_ok("link=Classifications");
+$sel->click_ok("link=Kategorie");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Select classification");
+$sel->title_is("Wybór kategorii");
 
-# Delete old classifications if this script failed.
-# Accessing action=delete directly must 1) trigger the security check page,
-# and 2) automatically reclassify products in this classification.
-if ($sel->is_text_present("cone")) {
-    $sel->open_ok("/$config->{bugzilla_installation}/editclassifications.cgi?action=delete&amp;classification=cone");
-    $sel->title_is("Suspicious Action");
+# Jeśli test wykonał się wcześniej niepoprawnie, poniżej usuwa stare kategorie
+# Wykonanie polecenie action=delete powinno 1 wywołać stronę bezpieczeństwa,
+# 2) automatycznie usunąć wszystkie produkty z usuwanych kategorii
+if ($sel->is_text_present("kat_pierwsza")) {
+    $sel->open_ok("/$config->{bugzilla_installation}/editclassifications.cgi?action=delete&amp;classification=kat_pierwsza");
+    $sel->title_is("Podejrzana czynność");
     $sel->click_ok("confirm");
     $sel->wait_for_page_to_load_ok(WAIT_TIME);
-    $sel->title_is("Classification Deleted");
+    $sel->title_is("Usunięto kategorię");
 }
-if ($sel->is_text_present("ctwo")) {
-    $sel->open_ok("/$config->{bugzilla_installation}/editclassifications.cgi?action=delete&amp;classification=ctwo");
-    $sel->title_is("Suspicious Action");
+if ($sel->is_text_present("kat_druga")) {
+    $sel->open_ok("/$config->{bugzilla_installation}/editclassifications.cgi?action=delete&amp;classification=kat_druga");
+    $sel->title_is("Podejrzana czynność");
     $sel->click_ok("confirm");
     $sel->wait_for_page_to_load_ok(WAIT_TIME);
-    $sel->title_is("Classification Deleted");
+    $sel->title_is("Usunięto kategorię");
 }
 
-$sel->click_ok("link=Add");
+$sel->click_ok("link=Dodaj");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Add new classification");
-$sel->type_ok("classification", "cone");
-$sel->type_ok("description", "Classification number 1");
-$sel->click_ok('//input[@type="submit" and @value="Add"]');
+$sel->title_is("Dodawanie kategorii");
+$sel->type_ok("classification", "kat_pierwsza");
+$sel->type_ok("description", "Kategoria numer 1");
+$sel->click_ok('//input[@type="submit" and @value="Dodaj"]');
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("New Classification Created");
+$sel->title_is("Utworzono nową kategorię");
 
-# Add TestProduct to the new classification. There should be no other
-# products in this classification.
+# Dodawanie produktu TestProduct do nowej kategorii.
+# To powinien być jedyny produkt dodany do tej kategorii.
 
 $sel->select_ok("prodlist", "value=TestProduct");
 $sel->click_ok("add_products");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Reclassify products");
+$sel->title_is("Zmiana kategorii produktów");
 my @products = $sel->get_select_options("myprodlist");
-ok(scalar @products == 1 && $products[0] eq 'TestProduct', "TestProduct successfully added to 'cone'");
+ok(scalar @products == 1 && $products[0] eq 'TestProduct', "TestProduct został dodany do kategorii 'kat_pierwsza'");
 
-# Create a new bug in this product/classification.
 
-file_bug_in_product($sel, 'TestProduct', 'cone');
-my $bug_summary = "Bug in classification cone";
+# Tworzenie nowego błędu w tej parze kategorii/produktu.
+
+file_bug_in_product($sel, 'TestProduct', 'kat_pierwsza');
+my $bug_summary = "Błąd w kategorii pierwszej";
 $sel->type_ok("short_desc", $bug_summary);
-$sel->type_ok("comment", "Created by Selenium with classifications turned on");
+$sel->type_ok("comment", "Utworzony przez test Selenium w czasie wykonywania testu sprawdzającego kategorie");
 create_bug($sel, $bug_summary);
 
-# Rename 'cone' to 'Unclassified', which must be rejected as it already exists,
-# then to 'ctwo', which is not yet in use. Should work fine, even with products
-# already in it.
+# Próba zmiany nazwy z 'kat_pierwsza' na 'Unclassified'. Czynność powinna być odrzucona,
+# bo taka kategoria już istnieje. Następnie próba zmiany nazwy na 'kat_druga', która 
+# jeszcze nie istnieje. Druga próba zmiany powinna być udana, nawet jeśli w kategorii
+# są jakieś produkty.
 
 go_to_admin($sel);
-$sel->click_ok("link=Classifications");
+$sel->click_ok("link=Kategorie");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Select classification");
-$sel->click_ok("link=cone");
+$sel->title_is("Wybór kategorii");
+$sel->click_ok("link=kat_pierwsza");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Edit classification");
+$sel->title_is("Modyfikacja kategorii");
 $sel->type_ok("classification", "Unclassified");
-$sel->click_ok("//input[\@value='Update']");
+$sel->click_ok("//input[\@value='Aktualizuj']");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Classification Already Exists");
+$sel->title_is("Kategoria już istnieje");
 $sel->go_back_ok();
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Edit classification");
-$sel->type_ok("classification", "ctwo");
-$sel->click_ok("//input[\@value='Update']");
+$sel->title_is("Modyfikacja kategorii");
+$sel->type_ok("classification", "kat_druga");
+$sel->click_ok("//input[\@value='Aktualizuj']");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Classification Updated");
+$sel->title_is("Zaktualizowano kategorię");
 
-# Now try to delete the 'ctwo' classification. It should fail as there are
-# products in it.
+# Próba usunięcia kategorii kat_druga. Nie powinna się udać, ponieważ
+# w kategorii są produkty.
 
 go_to_admin($sel);
-$sel->click_ok("link=Classifications");
+$sel->click_ok("link=Kategorie");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Select classification");
-$sel->click_ok('//a[@href="editclassifications.cgi?action=del&classification=ctwo"]');
+$sel->title_is("Wybór kategorii");
+$sel->click_ok('//a[@href="editclassifications.cgi?action=del&classification=kat_druga"]');
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Error");
+$sel->title_is("Błąd");
 my $error = trim($sel->get_text("error_msg"));
-ok($error =~ /there are products for this classification/, "Reject classification deletion");
+ok($error =~ /W tej kategorii nadal istnieją produkty/, "Odmowa usunięcia kategorii");
 
-# Reclassify the product before deleting the classification.
+# Zmiana kategorii produktu przed usunięciem kategorii.
 
 $sel->go_back_ok();
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Select classification");
-$sel->click_ok('//a[@href="editclassifications.cgi?action=reclassify&classification=ctwo"]');
+$sel->title_is("Wybór kategorii");
+$sel->click_ok('//a[@href="editclassifications.cgi?action=reclassify&classification=kat_druga"]');
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Reclassify products");
+$sel->title_is("Zmiana kategorii produktów");
 $sel->add_selection_ok("myprodlist", "label=TestProduct");
 $sel->click_ok("remove_products");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Reclassify products");
-$sel->click_ok("link=edit");
-$sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Select classification");
-$sel->click_ok('//a[@href="editclassifications.cgi?action=del&classification=ctwo"]');
-$sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Delete classification");
-$sel->is_text_present_ok("Do you really want to delete this classification?");
-$sel->click_ok("//input[\@value='Yes, delete']");
-$sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Classification Deleted");
+$sel->title_is("Zmiana kategorii produktów");
+$sel->click_ok("link=Modyfikuj kategorie");
 
-# Disable classifications and make sure you cannot edit them anymore.
+$sel->wait_for_page_to_load_ok(WAIT_TIME);
+$sel->title_is("Wybór kategorii");
+$sel->click_ok('//a[@href="editclassifications.cgi?action=del&classification=kat_druga"]');
+$sel->wait_for_page_to_load_ok(WAIT_TIME);
+$sel->title_is("Usuwanie kategorii");
+$sel->is_text_present_ok("Czy na pewno chcesz usunąć tę kategorię?");
+$sel->click_ok("//input[\@value='Tak']");
+$sel->wait_for_page_to_load_ok(WAIT_TIME);
+$sel->title_is("Usunięto kategorię");
 
-set_parameters($sel, { "Bug Fields" => {"useclassification-off" => undef} });
+# Wyłączanie tworzenia i edycji kategorii
+
+set_parameters($sel, { "Pola błędu" => {"useclassification-off" => undef} });
 $sel->open_ok("/$config->{bugzilla_installation}/editclassifications.cgi");
-$sel->title_is("Classification Not Enabled");
+$sel->title_is("Kategorie nie zostały włączone");
 logout($sel);
