@@ -2,6 +2,7 @@
 
 package QA::Util;
 
+use utf8;
 use strict;
 use Data::Dumper;
 use HTTP::Cookies;
@@ -137,10 +138,12 @@ sub get_rpc_clients {
 # Helpers for Selenium Scripts #
 ################################
 
+
 sub go_to_home {
     my ($sel, $config) = @_;
-    $sel->open_ok("/$config->{bugzilla_installation}/", undef, "Go to the home page");
-    $sel->title_is("Bugzilla Main Page");
+    $sel->open_ok("/$config->{bugzilla_installation}/", undef, "Przejdź do strony głównej");
+    # $sel->is_text_present("Strona główna");
+    $sel->title_is("Bugzilla – Strona główna");
 }
 
 # Go to the home/login page and log in.
@@ -148,20 +151,21 @@ sub log_in {
     my ($sel, $config, $user) = @_;
 
     go_to_home($sel, $config);
-    $sel->type_ok("Bugzilla_login_top", $config->{"${user}_user_login"}, "Enter $user login name");
-    $sel->type_ok("Bugzilla_password_top", $config->{"${user}_user_passwd"}, "Enter $user password");
-    $sel->click_ok("log_in_top", undef, "Submit credentials");
+    $sel->type_ok("Bugzilla_login_top", $config->{"${user}_user_login"}, "Wprowadź login użytkownika $user");
+    $sel->type_ok("Bugzilla_password_top", $config->{"${user}_user_passwd"}, "Wprowadź hasło użytkownika $user");
+    $sel->click_ok("log_in_top", undef, "Zaloguj się");
     $sel->wait_for_page_to_load(WAIT_TIME);
-    $sel->title_is("Bugzilla Main Page", "User is logged in");
+    #$sel->is_text_present("Strona główna", "Użytkownik jest zalogowany");
+    $sel->title_is("Bugzilla – Strona główna", "Użytkownik jest zalogowany");
 }
 
 # Log out. Will fail if you are not logged in.
 sub logout {
     my $sel = shift;
 
-    $sel->click_ok("link=Log out", undef, "Logout");
+    $sel->click_ok("link=Wyloguj", undef, "Wyloguj"); #to odwoluje sie do tresci w linku a ta jest po polsku wiec ten polski tekst trzeba to wstawic
     $sel->wait_for_page_to_load_ok(WAIT_TIME);
-    $sel->title_is("Logged Out");
+    $sel->title_is("Wylogowano");
 }
 
 # Display the bug form to enter a bug in the given product.
@@ -169,24 +173,24 @@ sub file_bug_in_product {
     my ($sel, $product, $classification) = @_;
 
     $classification ||= "Unclassified";
-    $sel->click_ok("link=New", undef, "Go create a new bug");
+    $sel->click_ok("link=Nowy", undef, "Utwórz nowy błąd");
     $sel->wait_for_page_to_load(WAIT_TIME);
     my $title = $sel->get_title();
-    if ($title eq "Select Classification") {
+    if ($title eq "Wybór kategorii") {
         ok(1, "More than one enterable classification available. Display them in a list");
         $sel->click_ok("link=$classification", undef, "Choose $classification");
         $sel->wait_for_page_to_load(WAIT_TIME);
         $title = $sel->get_title();
     }
-    if ($title eq "Enter Bug") {
-        ok(1, "Display the list of enterable products");
-        $sel->click_ok("link=$product", undef, "Choose $product");
+    if ($title eq "Zgłaszanie błędu") {
+        ok(1, "Wyświetl listę wprowadzalnych produktów");
+        $sel->click_ok("link=$product", undef, "Wybrano $product");
         $sel->wait_for_page_to_load(WAIT_TIME);
     }
     else {
-        ok(1, "Only one product available in $classification. Skipping the 'Choose product' page.")
+        ok(1, "Tylko jeden produkt jest dostępny w $classification. Pomijam stronę 'Wybierz produkt'.")
     }
-    $sel->title_is("Enter Bug: $product", "Display form to enter bug data");
+    $sel->title_is("Zgłaszanie błędu: $product", "Wyświetlono formularz wprowadzania danych błędu");
 }
 
 sub create_bug {
@@ -196,7 +200,7 @@ sub create_bug {
     $sel->click_ok('commit');
     $sel->wait_for_page_to_load_ok(WAIT_TIME);
     my $bug_id = $sel->get_value('//input[@name="id" and @type="hidden"]');
-    $sel->title_is("Bug $bug_id $ndash $bug_summary", "Bug $bug_id created with summary '$bug_summary'");
+    $sel->title_is("Błąd $bug_id $ndash $bug_summary", "Błąd numer $bug_id z opisem '$bug_summary'");
     return $bug_id;
 }
 
@@ -207,7 +211,7 @@ sub edit_bug {
 
     $sel->click_ok($btn_id);
     $sel->wait_for_page_to_load_ok(WAIT_TIME);
-    $sel->title_is("Bug $bug_id $ndash $bug_summary", "Changes submitted to bug $bug_id");
+    $sel->title_is("Błąd $bug_id $ndash $bug_summary", "Zapisano zmiany dla błędu $bug_id");
     # If the web browser doesn't support history.ReplaceState or has it turned off,
     # "Bug XXX processed" is displayed instead (as in Bugzilla 4.0 and older).
     # $sel->title_is("Bug $bug_id processed", "Changes submitted to bug $bug_id");
@@ -218,9 +222,9 @@ sub edit_bug_and_return {
     my $ndash = NDASH;
 
     edit_bug($sel, $bug_id, $bug_summary, $options);
-    $sel->click_ok("link=bug $bug_id");
+    $sel->click_ok("link=błędu $bug_id"); #zwrpc uwage na forme wyrazu "bledu" - tak widnieje w polskim UI
     $sel->wait_for_page_to_load_ok(WAIT_TIME);
-    $sel->title_is("Bug $bug_id $ndash $bug_summary", "Returning back to bug $bug_id");
+    $sel->title_is("Błąd $bug_id $ndash $bug_summary", "Wracam do błędu $bug_id");
 }
 
 # Go to show_bug.cgi.
@@ -228,20 +232,21 @@ sub go_to_bug {
     my ($sel, $bug_id) = @_;
 
     $sel->type_ok("quicksearch_top", $bug_id);
-    $sel->click_ok("find_top", undef, "Go to bug $bug_id");
+    $sel->click_ok("find_top", undef, "Przejdź do błędu $bug_id");
     $sel->wait_for_page_to_load_ok(WAIT_TIME);
     my $bug_title = $sel->get_title();
     utf8::encode($bug_title) if utf8::is_utf8($bug_title);
-    $sel->title_like(qr/^Bug $bug_id /, $bug_title);
+    $sel->title_like(qr/^Błąd $bug_id /, $bug_title);
 }
 
 # Go to admin.cgi.
 sub go_to_admin {
     my $sel = shift;
 
-    $sel->click_ok("link=Administration", undef, "Go to the Admin page");
+    $sel->click_ok("link=Administracja", undef, "Przejdź do strony administracyjnej");
     $sel->wait_for_page_to_load(WAIT_TIME);
-    $sel->title_like(qr/^Administer your installation/, "Display admin.cgi");
+    $sel->is_text_present_ok("Administrowanie instalacją");
+    # $sel->title_like(qr/^Administrowanie instalacją/, "Wyświetl admin.cgi");
 }
 
 # Go to editproducts.cgi and display the given product.
@@ -250,20 +255,20 @@ sub edit_product {
 
     $classification ||= "Unclassified";
     go_to_admin($sel);
-    $sel->click_ok("link=Products", undef, "Go to the Products page");
+    $sel->click_ok("link=Produkty", undef, "Przejdź do strony produktów");
     $sel->wait_for_page_to_load(WAIT_TIME);
     my $title = $sel->get_title();
-    if ($title eq "Select Classification") {
-        ok(1, "More than one enterable classification available. Display them in a list");
-        $sel->click_ok("link=$classification", undef, "Choose $classification");
+    if ($title eq "Wybór kategorii") {
+        ok(1, "Dostępna jest więcej niż jedna kategoria. Wyświetla listę kategorii.");
+        $sel->click_ok("link=$classification", undef, "Wybór kategorii $classification");
         $sel->wait_for_page_to_load(WAIT_TIME);
     }
     else {
-        $sel->title_is("Select product", "Display the list of enterable products");
+        $sel->title_is("Modyfikowanie produktów", "Wyświetl listę produktów w wybranej kategorii");
     }
-    $sel->click_ok("link=$product", undef, "Choose $product");
+    $sel->click_ok("link=$product", undef, "Wybór produktu $product");
     $sel->wait_for_page_to_load(WAIT_TIME);
-    $sel->title_is("Edit Product '$product'", "Display properties of $product");
+    $sel->title_is("Modyfikowanie produktu „$product”", "Wyświetlenie opcji z produkcie $product");
 }
 
 sub add_product {
@@ -271,7 +276,7 @@ sub add_product {
 
     $classification ||= "Unclassified";
     go_to_admin($sel);
-    $sel->click_ok("link=Products", undef, "Go to the Products page");
+    $sel->click_ok("link=Produkty", undef, "Przejdź do strony produktów");
     $sel->wait_for_page_to_load(WAIT_TIME);
     my $title = $sel->get_title();
     if ($title eq "Select Classification") {
@@ -280,25 +285,25 @@ sub add_product {
                        undef, "Add product to $classification");
     }
     else {
-        $sel->title_is("Select product", "Display the list of enterable products");
-        $sel->click_ok("link=Add", undef, "Add a new product");
+        $sel->title_is("Modyfikowanie produktów", "Display the list of enterable products");
+        $sel->click_ok("link=Dodaj produkt", undef, "Dodaj nowy produkt");
     }
     $sel->wait_for_page_to_load(WAIT_TIME);
-    $sel->title_is("Add Product", "Display the new product form");
+    $sel->title_is("Dodawanie produktu", "Wyświetl formularz dodawania nowego produktu");
 }
 
 sub open_advanced_search_page {
     my $sel = shift;
 
-    $sel->click_ok("link=Search");
+    $sel->click_ok("link=Wyszukiwanie");
     $sel->wait_for_page_to_load(WAIT_TIME);
     my $title = $sel->get_title();
-    if ($title eq "Simple Search") {
+    if ($title eq "Wyszukiwanie błędów") {
         ok(1, "Display the simple search form");
-        $sel->click_ok("link=Advanced Search");
+        $sel->click_ok("link=Wyszukiwanie zaawansowane");
         $sel->wait_for_page_to_load(WAIT_TIME);
     }
-    $sel->title_is("Search for bugs", "Display the Advanced search form");
+    $sel->title_is("Wyszukiwanie błędów", "Display the Advanced search form");
 }
 
 # $params is a hashref of the form:
@@ -317,16 +322,16 @@ sub set_parameters {
     my ($sel, $params) = @_;
 
     go_to_admin($sel);
-    $sel->click_ok("link=Parameters", undef, "Go to the Config Parameters page");
+    $sel->click_ok("link=Parametry", undef, "Strona z parametrami instalacji");
     $sel->wait_for_page_to_load(WAIT_TIME);
-    $sel->title_is("Configuration: Required Settings");
-    my $last_section = "Required Settings";
+    $sel->title_is("Konfiguracja: Ustawienia wymagane");
+    my $last_section = "Ustawienia wymagane";
 
     foreach my $section (keys %$params) {
         if ($section ne $last_section) {
             $sel->click_ok("link=$section");
             $sel->wait_for_page_to_load_ok(WAIT_TIME);
-            $sel->title_is("Configuration: $section");
+            $sel->title_is("Konfiguracja: $section");
             $last_section = $section;
         }
         my $param_list = $params->{$section};
@@ -352,9 +357,9 @@ sub set_parameters {
                 $sel->click_ok($param);
             }
         }
-        $sel->click_ok('//input[@type="submit" and @value="Save Changes"]', undef, "Save Changes");
+        $sel->click_ok('//input[@type="submit" and @value="Zapisz zmiany"]', undef, "Zapisz zmiany");
         $sel->wait_for_page_to_load_ok(WAIT_TIME);
-        $sel->title_is("Parameters Updated");
+        $sel->title_is("Zaktualizowano parametry");
     }
 }
 
