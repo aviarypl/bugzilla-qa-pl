@@ -1,6 +1,7 @@
 use strict;
 use warnings;
 use lib qw(lib);
+use utf8;
 
 use Test::More "no_plan";
 
@@ -8,112 +9,113 @@ use QA::Util;
 
 my ($sel, $config) = get_selenium();
 
-# Set the email regexp for new bugzilla accounts to end with @bugzilla.test.
+# Adresy e-mail dla nowych kont w bugzilli będą w domenie @bugzilla.test
 
 log_in($sel, $config, 'admin');
-set_parameters($sel, { "User Authentication" => {"createemailregexp" => {type => "text", value => '[^@]+@bugzilla\.test'}} });
+set_parameters($sel, { "Uwierzytelnianie użytkowników" => {"createemailregexp" => {type => "text", value => '[^@]+@bugzilla\.test'}} });
 logout($sel);
 
-# Create a valid account. We need to randomize the login address, because a request
-# expires after 3 days only and this test can be executed several times per day.
+# Zakładanie konta. Dane użyte do adresu e-mail będą przypadkowe, 
+# ponieważ wniosek o założenie konta wygasa po trzech dniach,
+# a test może być uruchamiany wiele razy w ciągu jednego dnia
 my $valid_account = 'selenium-' . random_string(10) . '@bugzilla.test';
 
-$sel->click_ok("link=Home");
+$sel->click_ok("link=Główna");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Bugzilla Main Page");
-$sel->is_text_present_ok("Open a New Account");
-$sel->click_ok("link=Open a New Account");
+$sel->title_is("Bugzilla – Strona główna");
+$sel->is_text_present_ok("Nowe konto");
+$sel->click_ok("link=Nowe konto");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Create a new Bugzilla account");
+$sel->title_is("Tworzenie nowego konta w Bugzilli");
 $sel->type_ok("login", $valid_account);
 $sel->click_ok("send");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Request for new user account '$valid_account' submitted");
-$sel->is_text_present_ok("A confirmation email has been sent");
+$sel->title_is("Prośba o utworzenie nowego konta „$valid_account” została dostarczona");
+$sel->is_text_present_ok("Wiadomość zawierająca odnośnik do kontynuacji tworzenia konta została wysłana.");
 
-# Try creating the same account again. It's too soon.
-$sel->click_ok("link=Home");
+# Próba założenia konta po raz drugi, z tym samym adresem.
+$sel->click_ok("link=Główna");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Bugzilla Main Page");
-$sel->is_text_present_ok("Open a New Account");
-$sel->click_ok("link=Open a New Account");
+$sel->title_is("Bugzilla – Strona główna");
+$sel->is_text_present_ok("Nowe konto");
+$sel->click_ok("link=Nowe konto");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Create a new Bugzilla account");
+$sel->title_is("Tworzenie nowego konta w Bugzilli");
 $sel->type_ok("login", $valid_account);
 $sel->click_ok("send");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Too Soon For New Token");
+$sel->title_is("Zbyt krótki okres pomiędzy prośbami o nowy token");
 my $error_msg = trim($sel->get_text("error_msg"));
-ok($error_msg =~ /Please wait a while and try again/, "Too soon for this account");
+ok($error_msg =~ /Proszę odczekać chwilę i spróbować ponownie/, "Za wcześnie na zakładanie tego samego konta po raz drugi");
 
-# These accounts do not pass the regexp.
+# Konta z niewłaściwą domeną w adresie
 my @accounts = ('test@yahoo.com', 'test@bugzilla.net', 'test@bugzilla..test');
 foreach my $account (@accounts) {
-    $sel->click_ok("link=New Account");
+    $sel->click_ok("link=Nowe konto");
     $sel->wait_for_page_to_load_ok(WAIT_TIME);
-    $sel->title_is("Create a new Bugzilla account");
+    $sel->title_is("Tworzenie nowego konta w Bugzilli");
     $sel->type_ok("login", $account);
     $sel->click_ok("send");
     $sel->wait_for_page_to_load_ok(WAIT_TIME);
-    $sel->title_is("Account Creation Restricted");
-    $sel->is_text_present_ok("User account creation has been restricted.");
+    $sel->title_is("Tworzenie kont jest ograniczone");
+    $sel->is_text_present_ok("Tworzenie kont zostało ograniczone.");
 }
 
-# These accounts are illegal.
+# Nieprawidłowe adresy email
 @accounts = ('test\bugzilla@bugzilla.test', 'test@bugzilla.org@bugzilla.test');
 foreach my $account (@accounts) {
-    $sel->click_ok("link=New Account");
+    $sel->click_ok("link=Nowe konto");
     $sel->wait_for_page_to_load_ok(WAIT_TIME);
-    $sel->title_is("Create a new Bugzilla account");
+    $sel->title_is("Tworzenie nowego konta w Bugzilli");
     $sel->type_ok("login", $account);
     $sel->click_ok("send");
     $sel->wait_for_page_to_load_ok(WAIT_TIME);
-    $sel->title_is("Invalid Email Address");
+    $sel->title_is("Nieprawidłowy adres e-mail");
     my $error_msg = trim($sel->get_text("error_msg"));
-    ok($error_msg =~ /^The e-mail address you entered (\S+) didn't pass our syntax checking/, "Invalid email address detected");
+    ok($error_msg =~ /^Podany adres e-mail (\S+) nie spełnia warunków poprawności adresu e-mail/, "Wykryto użycie nieprawidłowego adresu e-mail");
 }
 
-# This account already exists.
-$sel->click_ok("link=New Account");
+# Użycie adresu e-mail dla konta już istniejącego
+$sel->click_ok("link=Nowe konto");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Create a new Bugzilla account");
+$sel->title_is("Tworzenie nowego konta w Bugzilli");
 $sel->type_ok("login", $config->{admin_user_login});
 $sel->click_ok("send");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Account Already Exists");
+$sel->title_is("Konto już istnieje");
 $error_msg = trim($sel->get_text("error_msg"));
-ok($error_msg eq "There is already an account with the login name $config->{admin_user_login}.", "Account already exists");
+ok($error_msg eq "Już istnieje konto o identyfikatorze $config->{admin_user_login}.", "Wykryto istniejące konto");
 
-# Turn off user account creation.
+# Wyłączenie możliwości zakładania nowych kont
 log_in($sel, $config, 'admin');
-set_parameters($sel, { "User Authentication" => {"createemailregexp" => {type => "text", value => ''}} });
+set_parameters($sel, { "Uwierzytelnianie użytkowników" => {"createemailregexp" => {type => "text", value => ''}} });
 logout($sel);
 
-# Make sure that links pointing to createaccount.cgi are all deactivated.
-ok(!$sel->is_text_present("New Account"), "No link named 'New Account'");
-$sel->click_ok("link=Home");
+# Sprawdzanie, czy wszystkie odnośniki do strony createaccount.cgi są ukryte
+ok(!$sel->is_text_present("Nowe konto"), "Brak odnośnika do strony 'Nowe konto'");
+$sel->click_ok("link=Główna");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Bugzilla Main Page");
-ok(!$sel->is_text_present("Open a New Account"), "No link named 'Open a New Account'");
+$sel->title_is("Bugzilla – Strona główna");
+ok(!$sel->is_text_present("Nowe konto"), "Brak odnośnika do strony 'Nowe konto'");
 $sel->open_ok("/$config->{bugzilla_installation}/createaccount.cgi");
-$sel->title_is("Account Creation Disabled");
+$sel->title_is("Tworzenie kont jest wyłączone");
 $error_msg = trim($sel->get_text("error_msg"));
-ok($error_msg =~ /^User account creation has been disabled. New accounts must be created by an administrator/,
-   "User account creation disabled");
+ok($error_msg =~ /^Tworzenie kont zostało wyłączone lub ograniczone. Nowe konta może tworzyć tylko administrator/,
+   "Tworzenie kont jest wyłączone");
 
-# Re-enable user account creation.
+# Włączanie możliwości zakładania kont
 
 log_in($sel, $config, 'admin');
-set_parameters($sel, { "User Authentication" => {"createemailregexp" => {type => "text", value => '.*'}} });
+set_parameters($sel, { "Uwierzytelnianie użytkowników" => {"createemailregexp" => {type => "text", value => '.*'}} });
 
 # Make sure selenium-<random_string>@bugzilla.test has not be added to the DB yet.
 go_to_admin($sel);
-$sel->click_ok("link=Users");
+$sel->click_ok("link=Użytkownicy");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Search users");
+$sel->title_is("Wyszukiwanie użytkowników");
 $sel->type_ok("matchstr", $valid_account);
 $sel->click_ok("search");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Select user");
-$sel->is_text_present_ok("0 users found");
+$sel->title_is("Lista użytkowników");
+$sel->is_text_present_ok("Znaleziono 0 użytkowników");
 logout($sel);
