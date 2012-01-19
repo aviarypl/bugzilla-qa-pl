@@ -1,6 +1,7 @@
 use strict;
 use warnings;
 use lib qw(lib);
+use utf8;
 
 use Test::More "no_plan";
 
@@ -9,42 +10,46 @@ use QA::Util;
 my ($sel, $config) = get_selenium();
 log_in($sel, $config, 'admin');
 
-# Create new bug to test custom fields
+# Jeśli test został przerwany i nie zakończony, to dodane pola nie są usuwane
+# Tak mnie wkurzyło ich usuwanie ręcznie, że dodałam usuwanie i tutaj
+delete_unused_values($sel);
+
+# Tworzenie błędów do testowania pól dodatkowych
 
 file_bug_in_product($sel, 'TestProduct');
-my $bug_summary = "What's your ID?";
+my $bug_summary = "Jaki jest mój numer?";
 $sel->type_ok("short_desc", $bug_summary);
-$sel->type_ok("comment", "Use the ID of this bug to generate a unique custom field name.");
-$sel->type_ok("bug_severity", "label=normal");
+$sel->type_ok("comment", "Numer tego błędu zostanie użyty do stworzenia pola dodatkowego o unikalnej nazwie");
+$sel->type_ok("bug_severity", "label=Normalny");
 my $bug1_id = create_bug($sel, $bug_summary);
 
-# Create custom fields
+# Tworzenie pól dodatkowych
 
 go_to_admin($sel);
-$sel->click_ok("link=Custom Fields");
+$sel->click_ok("link=Pola dodatkowe");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Custom Fields");
-$sel->click_ok("link=Add a new custom field");
+$sel->title_is("Pola dodatkowe");
+$sel->click_ok("link=Nowe pole dodatkowe");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Add a new Custom Field");
-$sel->type_ok("name", "cf_qa_freetext_$bug1_id");
-$sel->type_ok("desc", "Freetext$bug1_id");
-$sel->select_ok("type", "label=Free Text");
+$sel->title_is("Dodawanie dodatkowego pola");
+$sel->type_ok("name", "cf_qa_poletekstowe_$bug1_id");
+$sel->type_ok("desc", "PoleTekstowe$bug1_id");
+$sel->select_ok("type", "label=Pole tekstowe");
 $sel->type_ok("sortkey", $bug1_id);
-# These values are off by default.
+# Te opcje są domyślnie wyłączane
 $sel->value_is("enter_bug", "off");
 $sel->value_is("obsolete", "off");
 $sel->click_ok("create");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Custom Field Created");
-$sel->is_text_present_ok("The new custom field 'cf_qa_freetext_$bug1_id' has been successfully created.");
+$sel->title_is("Utworzono pole dodatkowe");
+$sel->is_text_present_ok("Nowe pole dodatkowe „cf_qa_poletekstowe_$bug1_id” zostało utworzone.");
 
-$sel->click_ok("link=Add a new custom field");
+$sel->click_ok("link=Nowe pole dodatkowe");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Add a new Custom Field");
+$sel->title_is("Dodawanie dodatkowego pola");
 $sel->type_ok("name", "cf_qa_list_$bug1_id");
 $sel->type_ok("desc", "List$bug1_id");
-$sel->select_ok("type", "label=Drop Down");
+$sel->select_ok("type", "label=Lista rozwijana");
 $sel->type_ok("sortkey", $bug1_id);
 $sel->click_ok("enter_bug");
 $sel->value_is("enter_bug", "on");
@@ -53,15 +58,15 @@ $sel->value_is("new_bugmail", "on");
 $sel->value_is("obsolete", "off");
 $sel->click_ok("create");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Custom Field Created");
-$sel->is_text_present_ok("The new custom field 'cf_qa_list_$bug1_id' has been successfully created.");
+$sel->title_is("Utworzono pole dodatkowe");
+$sel->is_text_present_ok("Nowe pole dodatkowe „cf_qa_list_$bug1_id” zostało utworzone.");
 
-$sel->click_ok("link=Add a new custom field");
+$sel->click_ok("link=Nowe pole dodatkowe");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Add a new Custom Field");
-$sel->type_ok("name", "cf_qa_bugid_$bug1_id");
+$sel->title_is("Dodawanie dodatkowego pola");
+$sel->type_ok("name", "cf_qa_blad_nr_$bug1_id");
 $sel->type_ok("desc", "Reference$bug1_id");
-$sel->select_ok("type", "label=Bug ID");
+$sel->select_ok("type", "label=Identyfikator błędu");
 $sel->type_ok("sortkey", $bug1_id);
 $sel->type_ok("reverse_desc", "IsRef$bug1_id");
 $sel->click_ok("enter_bug");
@@ -69,140 +74,139 @@ $sel->value_is("enter_bug", "on");
 $sel->value_is("obsolete", "off");
 $sel->click_ok("create");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Custom Field Created");
-$sel->is_text_present_ok("The new custom field 'cf_qa_bugid_$bug1_id' has been successfully created.");
+$sel->title_is("Utworzono pole dodatkowe");
+$sel->is_text_present_ok("Nowe pole dodatkowe „cf_qa_blad_nr_$bug1_id” zostało utworzone.");
 
-# Add values to the custom fields.
+# Dodawanie wartości do pola dodatkowego.
 
 $sel->click_ok("link=cf_qa_list_$bug1_id");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Edit the Custom Field 'cf_qa_list_$bug1_id' (List$bug1_id)");
-$sel->click_ok("link=Edit legal values for this field");
+$sel->title_is("Modyfikowanie pola dodatkowego „cf_qa_list_$bug1_id” (List$bug1_id)");
+$sel->click_ok("link=Modyfikowanie dozwolonych wartości dla tego pola");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Select value for the 'List$bug1_id' (cf_qa_list_$bug1_id) field");
+$sel->title_is("Modyfikowanie wartości dla pola „List$bug1_id” (cf_qa_list_$bug1_id)");
 
-$sel->click_ok("link=Add");
+$sel->click_ok("link=Dodaj wartość");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Add Value for the 'List$bug1_id' (cf_qa_list_$bug1_id) field");
-$sel->type_ok("value", "have fun?");
+$sel->title_is("Dodawanie wartości dla pola „List$bug1_id” (cf_qa_list_$bug1_id)");
+$sel->type_ok("value", "zabawimy się?");
 $sel->type_ok("sortkey", "805");
 $sel->click_ok("create");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("New Field Value Created");
-$sel->is_text_present_ok("The value have fun? has been added as a valid choice for the List$bug1_id (cf_qa_list_$bug1_id) field.");
+$sel->title_is("Utworzono nową wartość pola");
+$sel->is_text_present_ok("Wartość zabawimy się? została dodana jako prawidłowy wybór dla pola List$bug1_id (cf_qa_list_$bug1_id).");
 
-$sel->click_ok("link=Add");
+$sel->click_ok("link=Dodaj wartość");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Add Value for the 'List$bug1_id' (cf_qa_list_$bug1_id) field");
-$sel->type_ok("value", "storage");
+$sel->title_is("Dodawanie wartości dla pola „List$bug1_id” (cf_qa_list_$bug1_id)");
+$sel->type_ok("value", "przechowywanie");
 $sel->type_ok("sortkey", "49");
 $sel->click_ok("create");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("New Field Value Created");
-$sel->is_text_present_ok("The value storage has been added as a valid choice for the List$bug1_id (cf_qa_list_$bug1_id) field.");
+$sel->title_is("Utworzono nową wartość pola");
+$sel->is_text_present_ok("Wartość przechowywanie została dodana jako prawidłowy wybór dla pola List$bug1_id (cf_qa_list_$bug1_id).");
 
-# Also create a new bug status and a new resolution.
+# Dodawanie nowego statusu i rozwiązania błędu
 
 go_to_admin($sel);
-$sel->click_ok("link=Field Values");
+$sel->click_ok("link=Wartości pól");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Edit values for which field?");
-$sel->click_ok("link=Resolution");
+$sel->title_is("Wybór pola");
+$sel->click_ok("link=Rozwiązanie");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Select value for the 'Resolution' (resolution) field");
-$sel->click_ok("link=Add");
+$sel->title_is("Modyfikowanie wartości dla pola „Resolution” (resolution)");
+$sel->click_ok("link=Dodaj wartość");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Add Value for the 'Resolution' (resolution) field");
-$sel->type_ok("value", "UPSTREAM");
+$sel->title_is("Dodawanie wartości dla pola „Resolution” (resolution)");
+$sel->type_ok("value", "PRZEKAZANY_DALEJ");
 $sel->type_ok("sortkey", 450);
 $sel->click_ok("create");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("New Field Value Created");
+$sel->title_is("Utworzono nową wartość pola");
 
 go_to_admin($sel);
-$sel->click_ok("link=Field Values");
+$sel->click_ok("link=Wartości pól");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Edit values for which field?");
+$sel->title_is("Wybór pola");
 $sel->click_ok("link=Status");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Select value for the 'Status' (bug_status) field");
-$sel->click_ok("link=Add");
+$sel->title_is("Modyfikowanie wartości dla pola „Status” (bug_status)");
+$sel->click_ok("link=Dodaj wartość");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Add Value for the 'Status' (bug_status) field");
-$sel->type_ok("value", "SUSPENDED");
+$sel->title_is("Dodawanie wartości dla pola „Status” (bug_status)");
+$sel->type_ok("value", "ZAWIESZONY");
 $sel->type_ok("sortkey", 250);
 $sel->click_ok("open_status");
 $sel->click_ok("create");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("New Field Value Created");
+$sel->title_is("Utworzono nową wartość pola");
 
-$sel->click_ok("link=Add");
+$sel->click_ok("link=Dodaj wartość");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Add Value for the 'Status' (bug_status) field");
-$sel->type_ok("value", "IN_QA");
+$sel->title_is("Dodawanie wartości dla pola „Status” (bug_status)");
+$sel->type_ok("value", "W_QA");
 $sel->type_ok("sortkey", 550);
 $sel->click_ok("closed_status");
 $sel->click_ok("create");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("New Field Value Created");
+$sel->title_is("Utworzono nową wartość pola");
 
-$sel->click_ok("link=status workflow page");
+$sel->click_ok("link=stronę zmian statusów błędów");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Edit Workflow");
-$sel->click_ok('//td[@title="From UNCONFIRMED to SUSPENDED"]//input[@type="checkbox"]');
-$sel->click_ok('//td[@title="From CONFIRMED to SUSPENDED"]//input[@type="checkbox"]');
-$sel->click_ok('//td[@title="From SUSPENDED to CONFIRMED"]//input[@type="checkbox"]');
-$sel->click_ok('//td[@title="From SUSPENDED to IN_PROGRESS"]//input[@type="checkbox"]');
-$sel->click_ok('//td[@title="From RESOLVED to IN_QA"]//input[@type="checkbox"]');
-$sel->click_ok('//td[@title="From IN_QA to VERIFIED"]//input[@type="checkbox"]');
-$sel->click_ok('//td[@title="From IN_QA to CONFIRMED"]//input[@type="checkbox"]');
-$sel->click_ok('//input[@value="Commit Changes"]');
+$sel->title_is("Modyfikowanie zmian statusu");
+$sel->click_ok('//td[@title="Z NIEPOTWIERDZONY na ZAWIESZONY"]//input[@type="checkbox"]');
+$sel->click_ok('//td[@title="Z POTWIERDZONY na ZAWIESZONY"]//input[@type="checkbox"]');
+$sel->click_ok('//td[@title="Z ZAWIESZONY na POTWIERDZONY"]//input[@type="checkbox"]');
+$sel->click_ok('//td[@title="Z ZAWIESZONY na W REALIZACJI"]//input[@type="checkbox"]');
+$sel->click_ok('//td[@title="Z ROZWIĄZANY na W_QA"]//input[@type="checkbox"]');
+$sel->click_ok('//td[@title="Z W_QA na ZWERYFIKOWANY"]//input[@type="checkbox"]');
+$sel->click_ok('//td[@title="Z W_QA na POTWIERDZONY"]//input[@type="checkbox"]');
+$sel->click_ok('//input[@value="Zapisz zmiany"]');
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Edit Workflow");
+$sel->title_is("Modyfikowanie zmian statusu");
 
-# Create new bug to test custom fields in bug creation page
+# Testowanie pól dodatkowych przy tworzeniu nowego błędu
 
 file_bug_in_product($sel, 'TestProduct');
 $sel->is_text_present_ok("List$bug1_id:");
 $sel->is_element_present_ok("cf_qa_list_$bug1_id");
 $sel->is_text_present_ok("Reference$bug1_id:");
-$sel->is_element_present_ok("cf_qa_bugid_$bug1_id");
-ok(!$sel->is_text_present("Freetext$bug1_id:"), "Freetext$bug1_id is not displayed");
-ok(!$sel->is_element_present("cf_qa_freetext_$bug1_id"), "cf_qa_freetext_$bug1_id is not available");
-my $bug_summary2 = "Et de un";
+$sel->is_element_present_ok("cf_qa_blad_nr_$bug1_id");
+ok(!$sel->is_text_present("Freetext$bug1_id:"), "Freetext$bug1_id się nie wyświetla");
+ok(!$sel->is_element_present("cf_qa_freetext_$bug1_id"), "cf_qa_freetext_$bug1_id jest niedostępny");
+my $bug_summary2 = "Jedyny i niepowtarzalny";
 $sel->type_ok("short_desc", $bug_summary2);
-$sel->select_ok("bug_severity", "critical");
-$sel->type_ok("cf_qa_bugid_$bug1_id", $bug1_id);
+$sel->select_ok("bug_severity", "Krytyczny");
+$sel->type_ok("cf_qa_blad_nr_$bug1_id", $bug1_id);
 my $bug2_id = create_bug($sel, $bug_summary2);
 
-# Both fields are editable.
+# Sprawdzanie, czy oba pola są edytowalne
 
-$sel->type_ok("cf_qa_freetext_$bug1_id", "bonsai");
+$sel->type_ok("cf_qa_poletekstowe_$bug1_id", "bonsai");
 $sel->selected_label_is("cf_qa_list_$bug1_id", "---");
-$sel->select_ok("bug_status", "label=SUSPENDED");
+$sel->select_ok("bug_status", "label=ZAWIESZONY");
 edit_bug($sel, $bug2_id, $bug_summary2);
 
 go_to_bug($sel, $bug1_id);
-$sel->type_ok("cf_qa_freetext_$bug1_id", "dumbo");
-$sel->select_ok("cf_qa_list_$bug1_id", "label=storage");
-$sel->is_text_present_ok("IsRef$bug1_id: $bug2_id");
-$sel->select_ok("bug_status", "RESOLVED");
-$sel->select_ok("resolution", "UPSTREAM");
+$sel->type_ok("cf_qa_poletekstowe_$bug1_id", "dumbo");
+$sel->select_ok("cf_qa_list_$bug1_id", "label=przechowywanie");
+$sel->select_ok("bug_status", "ROZWIĄZANY");
+$sel->select_ok("resolution", "PRZEKAZANY_DALEJ");
 edit_bug_and_return($sel, $bug1_id, $bug_summary);
-$sel->select_ok("bug_status", "IN_QA");
+$sel->select_ok("bug_status", "W_QA");
 edit_bug_and_return($sel, $bug1_id, $bug_summary);
 
-$sel->click_ok("link=Format For Printing");
+$sel->click_ok("link=Format wydruku");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Full Text Bug Listing");
-$sel->is_text_present_ok("Freetext$bug1_id: dumbo");
-$sel->is_text_present_ok("List$bug1_id: storage");
-$sel->is_text_present_ok("Status: IN_QA UPSTREAM");
+$sel->title_is("Pełny format listy błędów");
+$sel->is_text_present_ok("PoleTekstowe$bug1_id: dumbo");
+$sel->is_text_present_ok("List$bug1_id: przechowywanie");
+$sel->is_text_present_ok("Status: W_QA PRZEKAZANY_DALEJ");
 go_to_bug($sel, $bug2_id);
-$sel->select_ok("cf_qa_list_$bug1_id", "label=storage");
+$sel->select_ok("cf_qa_list_$bug1_id", "label=przechowywanie");
 edit_bug($sel, $bug2_id, $bug_summary2);
 
-# Test searching for bugs using the custom fields
+# Wyszukiwanie błędów z wykorzystaniem pól dodatkowych
 
 open_advanced_search_page($sel);
 $sel->remove_all_selections_ok("product");
@@ -210,243 +214,253 @@ $sel->add_selection_ok("product", "TestProduct");
 $sel->remove_all_selections("bug_status");
 $sel->remove_all_selections("resolution");
 $sel->select_ok("f1", "label=List$bug1_id");
-$sel->select_ok("o1", "label=is equal to");
-$sel->type_ok("v1", "storage");
-$sel->click_ok("Search");
+$sel->select_ok("o1", "label=jest taki, jak");
+$sel->type_ok("v1", "przechowywanie");
+$sel->click_ok("Szukaj");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Bug List");
-$sel->is_text_present_ok("2 bugs found");
-$sel->is_text_present_ok("What's your ID?");
-$sel->is_text_present_ok("Et de un");
+$sel->title_is("Lista błędów");
+$sel->is_text_present_ok("Znaleziono");
+$sel->is_text_present_ok("Jaki jest mój numer?");
+$sel->is_text_present_ok("Jedyny i niepowtarzalny");
 
-# Now edit custom fields in mass changes.
+# Test edycji pól dodatkowych podczas zmian grupowych
 
-$sel->click_ok("link=Change Several Bugs at Once");
+$sel->click_ok("link=Zmień wiele błędów jednocześnie");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Bug List");
+$sel->title_is("Lista błędów");
 $sel->click_ok("check_all");
 $sel->select_ok("cf_qa_list_$bug1_id", "label=---");
-$sel->type_ok("cf_qa_freetext_$bug1_id", "thanks");
+$sel->type_ok("cf_qa_poletekstowe_$bug1_id", "dzięki");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Bugs processed");
-$sel->click_ok("link=bug $bug2_id");
+$sel->title_is("Błędy zostały przetworzone");
+$sel->click_ok("link=błędu $bug2_id");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_like(qr/^Bug $bug2_id/);
-$sel->value_is("cf_qa_freetext_$bug1_id", "thanks");
+$sel->title_like(qr/^Błąd $bug2_id/);
+$sel->value_is("cf_qa_poletekstowe_$bug1_id", "dzięki");
 $sel->selected_label_is("cf_qa_list_$bug1_id", "---");
-$sel->select_ok("cf_qa_list_$bug1_id", "label=storage");
+$sel->select_ok("cf_qa_list_$bug1_id", "label=przechowywanie");
 edit_bug($sel, $bug2_id, $bug_summary2);
 
-# Let's now test custom field visibility.
+# Sprawdzanie widoczności pól dodatkowych
 
 go_to_admin($sel);
-$sel->click_ok("link=Custom Fields");
+$sel->click_ok("link=Pola dodatkowe");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Custom Fields");
+$sel->title_is("Pola dodatkowe");
 $sel->click_ok("link=cf_qa_list_$bug1_id");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Edit the Custom Field 'cf_qa_list_$bug1_id' (List$bug1_id)");
-$sel->select_ok("visibility_field_id", "label=Severity (bug_severity)");
-$sel->add_selection_ok("visibility_values", "label=blocker");
-$sel->add_selection_ok("visibility_values", "label=critical");
+$sel->title_is("Modyfikowanie pola dodatkowego „cf_qa_list_$bug1_id” (List$bug1_id)");
+$sel->select_ok("visibility_field_id", "label=Waga błędu (bug_severity)");
+$sel->add_selection_ok("visibility_values", "label=Blokujący");
+$sel->add_selection_ok("visibility_values", "label=Krytyczny");
 $sel->click_ok("edit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Custom Field Updated");
-
+$sel->title_is("Zaktualizowano pole dodatkowe");
 go_to_bug($sel, $bug1_id);
-$sel->is_element_present_ok("cf_qa_list_$bug1_id", "List$bug1_id is in the DOM of the page...");
-ok(!$sel->is_visible("cf_qa_list_$bug1_id"), "... but is not displayed with severity = 'normal'");
-$sel->select_ok("bug_severity", "major");
-ok(!$sel->is_visible("cf_qa_list_$bug1_id"), "... nor with severity = 'major'");
-$sel->select_ok("bug_severity", "critical");
-$sel->is_visible_ok("cf_qa_list_$bug1_id", "... but is visible with severity = 'critical'");
+$sel->is_element_present_ok("cf_qa_list_$bug1_id", "List$bug1_id jest obecny w DOM");
+ok(!$sel->is_visible("cf_qa_list_$bug1_id"), "... ale nie jest wyświetlany dla błędów z wagą = 'Normalny'");
+$sel->select_ok("bug_severity", "Poważny");
+ok(!$sel->is_visible("cf_qa_list_$bug1_id"), "... lub z wagą = 'Poważny'");
+$sel->select_ok("bug_severity", "Krytyczny");
+$sel->is_visible_ok("cf_qa_list_$bug1_id", "... ale jest widoczny dla błedów z wagą = 'Krytyczny'");
 edit_bug_and_return($sel, $bug1_id, $bug_summary);
 $sel->is_visible_ok("cf_qa_list_$bug1_id");
 
 go_to_bug($sel, $bug2_id);
 $sel->is_visible_ok("cf_qa_list_$bug1_id");
-$sel->select_ok("bug_severity", "minor");
-ok(!$sel->is_visible("cf_qa_list_$bug1_id"), "List$bug1_id is not displayed with severity = 'minor'");
+$sel->select_ok("bug_severity", "Drobny");
+ok(!$sel->is_visible("cf_qa_list_$bug1_id"), "List$bug1_id nie jest wyświetlany dla błędów z wagą = 'Drobny'");
 edit_bug_and_return($sel, $bug2_id, $bug_summary2);
-ok(!$sel->is_visible("cf_qa_list_$bug1_id"), "List$bug1_id is not displayed with severity = 'minor'");
+ok(!$sel->is_visible("cf_qa_list_$bug1_id"), "List$bug1_id nie jest wyświetlany dla błędów z wagą = 'Drobny'");
 
-# Add a new value which is only listed under some condition.
+# Dodawanie nowej wartości, wyświetlanej tylko pod pewnym warunkiem
 
 go_to_admin($sel);
-$sel->click_ok("link=Custom Fields");
+$sel->click_ok("link=Pola dodatkowe");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Custom Fields");
+$sel->title_is("Pola dodatkowe");
 $sel->click_ok("link=cf_qa_list_$bug1_id");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Edit the Custom Field 'cf_qa_list_$bug1_id' (List$bug1_id)");
-$sel->select_ok("value_field_id", "label=Resolution (resolution)");
+$sel->title_is("Modyfikowanie pola dodatkowego „cf_qa_list_$bug1_id” (List$bug1_id)");
+$sel->select_ok("value_field_id", "label=Rozwiązanie (resolution)");
 $sel->click_ok("edit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Custom Field Updated");
+$sel->title_is("Zaktualizowano pole dodatkowe");
 $sel->click_ok("link=cf_qa_list_$bug1_id");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Edit the Custom Field 'cf_qa_list_$bug1_id' (List$bug1_id)");
-$sel->click_ok("link=Edit legal values for this field");
+$sel->title_is("Modyfikowanie pola dodatkowego „cf_qa_list_$bug1_id” (List$bug1_id)");
+$sel->click_ok("link=Modyfikowanie dozwolonych wartości dla tego pola");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Select value for the 'List$bug1_id' (cf_qa_list_$bug1_id) field");
-$sel->click_ok("link=Add");
+$sel->title_is("Modyfikowanie wartości dla pola „List$bug1_id” (cf_qa_list_$bug1_id)");
+$sel->click_ok("link=Dodaj wartość");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Add Value for the 'List$bug1_id' (cf_qa_list_$bug1_id) field");
-$sel->type_ok("value", "ghost");
+$sel->title_is("Dodawanie wartości dla pola „List$bug1_id” (cf_qa_list_$bug1_id)");
+$sel->type_ok("value", "duch");
 $sel->type_ok("sortkey", "500");
+# to trzeba poprawić po naprawieniu błędu 4232
 $sel->select_ok("visibility_value_id", "label=FIXED");
 $sel->click_ok("id=create");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("New Field Value Created");
+$sel->title_is("Utworzono nową wartość pola");
 
 go_to_bug($sel, $bug1_id);
 my @labels = $sel->get_select_options("cf_qa_list_$bug1_id");
-ok(grep(/^ghost$/, @labels), "ghost is in the DOM of the page...");
+ok(grep(/^duch$/, @labels), "duch jest obecny w DOM strony...");
 my $disabled = $sel->get_attribute("v4_cf_qa_list_$bug1_id\@disabled");
-ok($disabled, "... but is not available for selection by default");
-$sel->select_ok("bug_status", "label=RESOLVED");
-$sel->select_ok("resolution", "label=FIXED");
-$sel->select_ok("cf_qa_list_$bug1_id", "label=ghost");
+ok($disabled, "... ale nie jest standardowo dostępny");
+$sel->select_ok("bug_status", "label=ROZWIĄZANY");
+$sel->select_ok("resolution", "label=NAPRAWIONY");
+$sel->select_ok("cf_qa_list_$bug1_id", "label=duch");
 edit_bug_and_return($sel, $bug1_id, $bug_summary);
-$sel->selected_label_is("cf_qa_list_$bug1_id", "ghost");
+$sel->selected_label_is("cf_qa_list_$bug1_id", "duch");
 
-# Delete an unused field value.
+# Usuwanie nieużywanej wartości pola
 
 go_to_admin($sel);
-$sel->click_ok("link=Field Values");
+$sel->click_ok("link=Wartości pól");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Edit values for which field?");
+$sel->title_is("Wybór pola");
 $sel->click_ok("link=List$bug1_id");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Select value for the 'List$bug1_id' (cf_qa_list_$bug1_id) field");
-$sel->click_ok("//a[contains(\@href, 'editvalues.cgi?action=del&field=cf_qa_list_$bug1_id&value=have%20fun%3F')]");
+$sel->title_is("Modyfikowanie wartości dla pola „List$bug1_id” (cf_qa_list_$bug1_id)");
+$sel->click_ok("//a[contains(\@href, 'editvalues.cgi?action=del&field=cf_qa_list_$bug1_id&value=zabawimy%20si%C4%99%3F')]");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Delete Value 'have fun?' from the 'List$bug1_id' (cf_qa_list_$bug1_id) field");
-$sel->is_text_present_ok("Do you really want to delete this value?");
+$sel->title_is("Usuwanie wartości „zabawimy się?” z pola „List$bug1_id” (cf_qa_list_$bug1_id)");
+$sel->is_text_present_ok("Czy na pewno chcesz usunąć tę wartość?");
 $sel->click_ok("delete");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Field Value Deleted");
+$sel->title_is("Usunięto wartość pola");
 
-# This value cannot be deleted as it's in use.
+# Usuwanie używanej wartości pola
 
-$sel->click_ok("//a[contains(\@href, 'editvalues.cgi?action=del&field=cf_qa_list_$bug1_id&value=storage')]");
+$sel->click_ok("//a[contains(\@href, 'editvalues.cgi?action=del&field=cf_qa_list_$bug1_id&value=przechowywanie')]");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Delete Value 'storage' from the 'List$bug1_id' (cf_qa_list_$bug1_id) field");
-$sel->is_text_present_ok("There is 1 bug with this field value");
+$sel->title_is("Usuwanie wartości „przechowywanie” z pola „List$bug1_id” (cf_qa_list_$bug1_id)");
+$sel->is_text_present_ok("Występuje 1 błąd z tą wartością");
 
-# Mark the <select> field as obsolete, making it unavailable in bug reports.
+# Oznaczanie <select> jako pola niaktualnego. Przez to powinien być niedostępny w formularzu zgłaszania błędu
 
 go_to_admin($sel);
-$sel->click_ok("link=Custom Fields");
+$sel->click_ok("link=Pola dodatkowe");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Custom Fields");
+$sel->title_is("Pola dodatkowe");
 $sel->click_ok("link=cf_qa_list_$bug1_id");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Edit the Custom Field 'cf_qa_list_$bug1_id' (List$bug1_id)");
+$sel->title_is("Modyfikowanie pola dodatkowego „cf_qa_list_$bug1_id” (List$bug1_id)");
 $sel->click_ok("obsolete");
 $sel->value_is("obsolete", "on");
 $sel->click_ok("edit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Custom Field Updated");
+$sel->title_is("Zaktualizowano pole dodatkowe");
 go_to_bug($sel, $bug1_id);
-$sel->value_is("cf_qa_freetext_$bug1_id", "thanks");
-ok(!$sel->is_element_present("cf_qa_list_$bug1_id"), "The custom list is not visible");
+$sel->value_is("cf_qa_poletekstowe_$bug1_id", "dzięki");
+ok(!$sel->is_element_present("cf_qa_list_$bug1_id"), "Pole dodatkowe jest niewidoczne");
 
-# Custom fields are also viewable by logged out users.
+# Pola dodatkowe powinny być widoczne także dla niezalogowanych użytkowników
 
 logout($sel);
 go_to_bug($sel, $bug1_id);
-$sel->is_text_present_ok("Freetext$bug1_id: thanks");
+$sel->is_text_present_ok("PoleTekstowe$bug1_id: dzięki");
 
-# Powerless users should still be able to CC themselves when
-# custom fields are in use.
+# Użytkownicy bez praw powinni móc dodać siebie do listy
+# obserwatorów, kiedy pola dodatkowe sa użyte
 
 log_in($sel, $config, 'unprivileged');
 go_to_bug($sel, $bug1_id);
-$sel->is_text_present_ok("Freetext$bug1_id: thanks");
+$sel->is_text_present_ok("PoleTekstowe$bug1_id: dzięki");
 $sel->click_ok("cc_edit_area_showhide");
 $sel->type_ok("newcc", $config->{unprivileged_user_login});
 edit_bug($sel, $bug1_id, $bug_summary);
 logout($sel);
 
-# Disable the remaining free text field.
+# Wyłączanie pozostałych pól tekstowych
 
 log_in($sel, $config, 'admin');
 go_to_admin($sel);
-$sel->click_ok("link=Custom Fields");
+$sel->click_ok("link=Pola dodatkowe");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Custom Fields");
-$sel->click_ok("link=cf_qa_freetext_$bug1_id");
+$sel->title_is("Pola dodatkowe");
+$sel->click_ok("link=cf_qa_poletekstowe_$bug1_id");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Edit the Custom Field 'cf_qa_freetext_$bug1_id' (Freetext$bug1_id)");
+$sel->title_is("Modyfikowanie pola dodatkowego „cf_qa_poletekstowe_$bug1_id” (PoleTekstowe$bug1_id)");
 $sel->click_ok("obsolete");
 $sel->value_is("obsolete", "on");
 $sel->click_ok("edit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Custom Field Updated");
+$sel->title_is("Zaktualizowano pole dodatkowe");
 
-# Trying to delete a bug status which is in use is forbidden.
+# Próba usunięcia statusu błędu, które jest w użyciu - niedozwolone
 
 go_to_admin($sel);
-$sel->click_ok("link=Field Values");
+$sel->click_ok("link=Wartości pól");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Edit values for which field?");
+$sel->title_is("Wybór pola");
 $sel->click_ok("link=Status");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Select value for the 'Status' (bug_status) field");
-$sel->click_ok('//a[@href="editvalues.cgi?action=del&field=bug_status&value=SUSPENDED"]');
+$sel->title_is("Modyfikowanie wartości dla pola „Status” (bug_status)");
+$sel->click_ok('//a[@href="editvalues.cgi?action=del&field=bug_status&value=ZAWIESZONY"]');
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Delete Value 'SUSPENDED' from the 'Status' (bug_status) field");
-$sel->is_text_present_ok("Sorry, but the 'SUSPENDED' value cannot be deleted");
+$sel->title_is("Usuwanie wartości „ZAWIESZONY” z pola „Status” (bug_status)");
+$sel->is_text_present_ok("Wartość „ZAWIESZONY” nie może zostać usunięta");
 
 go_to_bug($sel, $bug2_id);
-$sel->select_ok("bug_status", "CONFIRMED");
+$sel->select_ok("bug_status", "POTWIERDZONY");
 edit_bug($sel, $bug2_id, $bug_summary2);
 
 go_to_bug($sel, $bug1_id);
-$sel->select_ok("bug_status", "VERIFIED");
-$sel->select_ok("resolution", "INVALID");
+$sel->select_ok("bug_status", "ZWERYFIKOWANY");
+$sel->select_ok("resolution", "NIEPRAWIDŁOWY");
 edit_bug($sel, $bug1_id, $bug_summary);
 
-# Unused values can be deleted.
-
-go_to_admin($sel);
-$sel->click_ok("link=Field Values");
-$sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Edit values for which field?");
-$sel->click_ok("link=Status");
-$sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Select value for the 'Status' (bug_status) field");
-$sel->click_ok('//a[@href="editvalues.cgi?action=del&field=bug_status&value=SUSPENDED"]');
-$sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Delete Value 'SUSPENDED' from the 'Status' (bug_status) field");
-$sel->click_ok("delete");
-$sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Field Value Deleted");
-$sel->is_text_present_ok("The value SUSPENDED of the Status (bug_status) field has been deleted");
-
-$sel->click_ok('//a[@href="editvalues.cgi?action=del&field=bug_status&value=IN_QA"]');
-$sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Delete Value 'IN_QA' from the 'Status' (bug_status) field");
-$sel->click_ok("delete");
-$sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Field Value Deleted");
-$sel->is_text_present_ok("The value IN_QA of the Status (bug_status) field has been deleted");
-
-go_to_admin($sel);
-$sel->click_ok("link=Field Values");
-$sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Edit values for which field?");
-$sel->click_ok("link=Resolution");
-$sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Select value for the 'Resolution' (resolution) field");
-$sel->click_ok('//a[@href="editvalues.cgi?action=del&field=resolution&value=UPSTREAM"]');
-$sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Delete Value 'UPSTREAM' from the 'Resolution' (resolution) field");
-$sel->click_ok("delete");
-$sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Field Value Deleted");
-$sel->is_text_present_ok("The value UPSTREAM of the Resolution (resolution) field has been deleted");
-
+# Usuwanie nieużywanych wartości
+delete_unused_values($sel);
 logout($sel);
+
+sub delete_unused_values {
+    go_to_admin($sel);
+    $sel->click_ok("link=Wartości pól");
+    $sel->wait_for_page_to_load_ok(WAIT_TIME);
+    $sel->title_is("Wybór pola");
+    $sel->click_ok("link=Status");
+    $sel->wait_for_page_to_load_ok(WAIT_TIME);
+    $sel->title_is("Modyfikowanie wartości dla pola „Status” (bug_status)");
+    #usuwanie wartości z pola Status
+    if ($sel->is_text_present("ZAWIESZONY")) {
+        $sel->click_ok('//a[@href="editvalues.cgi?action=del&field=bug_status&value=ZAWIESZONY"]');
+        $sel->wait_for_page_to_load_ok(WAIT_TIME);
+        $sel->title_is("Usuwanie wartości „ZAWIESZONY” z pola „Status” (bug_status)");
+        $sel->click_ok("delete");
+        $sel->wait_for_page_to_load_ok(WAIT_TIME);
+        $sel->title_is("Usunięto wartość pola");
+        $sel->is_text_present_ok("Wartość ZAWIESZONY pola Status (bug_status) została usunięta");
+        };
+
+    if ($sel->is_text_present("W_QA")) {
+        $sel->click_ok('//a[@href="editvalues.cgi?action=del&field=bug_status&value=W_QA"]');
+        $sel->wait_for_page_to_load_ok(WAIT_TIME);
+        $sel->title_is("Usuwanie wartości „W_QA” z pola „Status” (bug_status)");
+        $sel->click_ok("delete");
+        $sel->wait_for_page_to_load_ok(WAIT_TIME);
+        $sel->title_is("Usunięto wartość pola");
+        $sel->is_text_present_ok("Wartość W_QA pola Status (bug_status) została usunięta");
+        };
+
+    # Usuwanie wartości z pola Rozwiązanie
+    go_to_admin($sel);
+    $sel->click_ok("link=Wartości pól");
+    $sel->wait_for_page_to_load_ok(WAIT_TIME);
+    $sel->title_is("Wybór pola");
+    $sel->click_ok("link=Rozwiązanie");
+    $sel->wait_for_page_to_load_ok(WAIT_TIME);
+    $sel->title_is("Modyfikowanie wartości dla pola „Resolution” (resolution)");
+    if ($sel->is_text_present("PRZEKAZANY_DALEJ")) {
+        $sel->click_ok('//a[@href="editvalues.cgi?action=del&field=resolution&value=PRZEKAZANY_DALEJ"]');
+        $sel->wait_for_page_to_load_ok(WAIT_TIME);
+        $sel->title_is("Usuwanie wartości „PRZEKAZANY_DALEJ” z pola „Resolution” (resolution)");
+        $sel->click_ok("delete");
+        $sel->wait_for_page_to_load_ok(WAIT_TIME);
+        $sel->title_is("Usunięto wartość pola");
+        $sel->is_text_present_ok("Wartość PRZEKAZANY_DALEJ pola Resolution (resolution) została usunięta");
+        };
+}
