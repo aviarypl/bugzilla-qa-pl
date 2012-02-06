@@ -1,51 +1,52 @@
 use strict;
 use warnings;
 use lib qw(lib);
+use utf8;
 
 use Test::More "no_plan";
 
 use QA::Util;
 
-# We have to upload files from the local computer. This requires
-# chrome privileges.
+# Do tego testu wymagane będzie dodawanie plików znajdujących się na dysku komputera.
+# Do tego potrzebne są przywileje chrome.
 my ($sel, $config) = get_selenium(CHROME_MODE);
 
-# First create a flag type for bugs.
+# Tworzenie rodzaju flagi dla błędów.
 
 log_in($sel, $config, 'admin');
 go_to_admin($sel);
-$sel->click_ok("link=Flags");
+$sel->click_ok("link=Flagi");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Administer Flag Types");
-$sel->click_ok("link=Create Flag Type for Bugs");
+$sel->title_is("Zarządzanie flagami");
+$sel->click_ok("link=Utwórz flagę dla błędów");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Create Flag Type for Bugs");
-$sel->type_ok("name", "SeleniumBugFlag1Test");
-$sel->type_ok("description", "bugflag1");
+$sel->title_is("Tworzenie flagi dla błędów");
+$sel->type_ok("name", "FlagaTestowa1");
+$sel->type_ok("description", "flagatestowa1");
 $sel->select_ok("product", "label=TestProduct");
 $sel->click_ok("categoryAction-include");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Create Flag Type for Bugs");
+$sel->title_is("Tworzenie flagi dla błędów");
 $sel->remove_all_selections_ok("inclusion_to_remove");
 $sel->add_selection_ok("inclusion_to_remove", "label=__Any__:__Any__");
 $sel->click_ok("categoryAction-removeInclusion");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Create Flag Type for Bugs");
+$sel->title_is("Tworzenie flagi dla błędów");
 $sel->select_ok("product", "label=QA-Selenium-TEST");
 $sel->click_ok("categoryAction-exclude");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Create Flag Type for Bugs");
+$sel->title_is("Tworzenie flagi dla błędów");
 $sel->select_ok("product", "label=QA-Selenium-TEST");
 $sel->click_ok("categoryAction-include");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Create Flag Type for Bugs");
+$sel->title_is("Tworzenie flagi dla błędów");
 my @inclusion = $sel->get_select_options("inclusion_to_remove");
-ok(scalar @inclusion == 2, "The inclusion list contains 2 elements");
-ok(grep($_ eq "QA-Selenium-TEST:__Any__", @inclusion), "QA-Selenium-TEST:__Any__ is in the inclusion list");
-ok(grep($_ eq "TestProduct:__Any__", @inclusion), "TestProduct:__Any__ is in the inclusion list");
+ok(scalar @inclusion == 2, "Lista dołączonych zawiera dwa elementy");
+ok(grep($_ eq "QA-Selenium-TEST:__Any__", @inclusion), "QA-Selenium-TEST:__Any__ znajduje się na liście dołączonych");
+ok(grep($_ eq "TestProduct:__Any__", @inclusion), "TestProduct:__Any__ znajduje się na liście dołączonych");
 my @exclusion = $sel->get_select_options("exclusion_to_remove");
-ok(scalar @exclusion == 1, "The exclusion list contains 1 element");
-ok($exclusion[0] eq "QA-Selenium-TEST:__Any__", "QA-Selenium-TEST:__Any__ is in the exclusion list");
+ok(scalar @exclusion == 1, "Lista wykluczonych zawiera jeden element");
+ok($exclusion[0] eq "QA-Selenium-TEST:__Any__", "QA-Selenium-TEST:__Any__ znajduje się na liście wykluczonych");
 $sel->type_ok("sortkey", "900");
 $sel->value_is("cc_list", "");
 $sel->value_is("is_active", "on");
@@ -53,29 +54,30 @@ $sel->value_is("is_requestable", "on");
 $sel->value_is("is_requesteeble", "on");
 $sel->value_is("is_multiplicable", "on");
 $sel->select_ok("grant_group", "label=admin");
-$sel->select_ok("request_group", "label=(no group)");
+$sel->select_ok("request_group", "label=(brak grupy)");
 $sel->click_ok("save");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Flag Type 'SeleniumBugFlag1Test' Created");
-$sel->is_text_present_ok("The flag type SeleniumBugFlag1Test has been created.");
-my $flagtype_url = $sel->get_attribute('link=SeleniumBugFlag1Test@href');
+$sel->title_is("Flaga „FlagaTestowa1” została utworzona");
+$sel->is_text_present_ok("Flaga FlagaTestowa1 została utworzona.");
+my $flagtype_url = $sel->get_attribute('link=FlagaTestowa1@href');
 $flagtype_url =~ /id=(\d+)$/;
 my $flagtype1_id = $1;
 
-# Clone the flag type, but set the request group to 'editbugs' and the sortkey to 950.
+# Kopiowanie flagi, ale ze zmianami w polu grupy pytającej (na 'editbugs') oraz klucza sortowania na 950.
 
 $sel->click_ok("//a[\@href='editflagtypes.cgi?action=copy&id=$flagtype1_id']");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Create Flag Type for Bugs Based on SeleniumBugFlag1Test");
-$sel->type_ok("name", "SeleniumBugFlag2Test");
-$sel->type_ok("description", "bugflag2");
+# Do poprawki po naprawieniu krowy 4251
+$sel->title_is("Tworzenie flagi dla błędów Na podstawie flagi „FlagaTestowa1”");
+$sel->type_ok("name", "FlagaTestowa2");
+$sel->type_ok("description", "flagatestowa2");
 @inclusion = $sel->get_select_options("inclusion_to_remove");
-ok(scalar @inclusion == 2, "The inclusion list contains 2 elements");
-ok(grep($_ eq "QA-Selenium-TEST:__Any__", @inclusion), "QA-Selenium-TEST:__Any__ is in the inclusion list");
-ok(grep($_ eq "TestProduct:__Any__", @inclusion), "TestProduct:__Any__ is in the inclusion list");
+ok(scalar @inclusion == 2, "Lista dołączonych zawiera dwa elementy");
+ok(grep($_ eq "QA-Selenium-TEST:__Any__", @inclusion), "QA-Selenium-TEST:__Any__ znajduje się na liście dołączonych");
+ok(grep($_ eq "TestProduct:__Any__", @inclusion), "TestProduct:__Any__ znajduje się na liście dołączonych");
 @exclusion = $sel->get_select_options("exclusion_to_remove");
-ok(scalar @exclusion == 1, "The exclusion list contains 1 element");
-ok($exclusion[0] eq "QA-Selenium-TEST:__Any__", "QA-Selenium-TEST:__Any__ is in the exclusion list");
+ok(scalar @exclusion == 1, "Lista wykluczonych zawiera jeden element");
+ok($exclusion[0] eq "QA-Selenium-TEST:__Any__", "QA-Selenium-TEST:__Any__ znajduje się na liście wykluczonych");
 $sel->type_ok("sortkey", "950");
 $sel->value_is("is_active", "on");
 $sel->value_is("is_requestable", "on");
@@ -86,161 +88,161 @@ $sel->selected_label_is("grant_group", "admin");
 $sel->select_ok("request_group", "label=editbugs");
 $sel->click_ok("save");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Flag Type 'SeleniumBugFlag2Test' Created");
-$sel->is_text_present_ok("The flag type SeleniumBugFlag2Test has been created.");
-$flagtype_url = $sel->get_attribute('link=SeleniumBugFlag2Test@href');
+$sel->title_is("Flaga „FlagaTestowa2” została utworzona");
+$sel->is_text_present_ok("Flaga FlagaTestowa2 została utworzona.");
+$flagtype_url = $sel->get_attribute('link=FlagaTestowa2@href');
 $flagtype_url =~ /id=(\d+)$/;
 my $flagtype2_id = $1;
 
-# Clone the first flag type again, but with different attributes.
+# Kopiowanie pierwszej flagi ponownie, ale z innymi atrybutami.
 
 $sel->click_ok("//a[\@href='editflagtypes.cgi?action=copy&id=$flagtype1_id']");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Create Flag Type for Bugs Based on SeleniumBugFlag1Test");
-$sel->type_ok("name", "SeleniumBugFlag3Test");
-$sel->type_ok("description", "bugflag3");
+$sel->title_is("Tworzenie flagi dla błędów Na podstawie flagi „FlagaTestowa1”");
+$sel->type_ok("name", "FlagaTestowa3");
+$sel->type_ok("description", "flagatestowa3");
 $sel->type_ok("sortkey", "980");
 $sel->value_is("is_active", "on");
 $sel->value_is("is_requestable", "on");
 $sel->uncheck_ok("is_requesteeble");
 $sel->uncheck_ok("is_multiplicable");
 $sel->value_is("cc_list", "");
-$sel->select_ok("grant_group", "label=(no group)");
-$sel->selected_label_is("request_group", "(no group)");
+$sel->select_ok("grant_group", "label=(brak grupy)");
+$sel->selected_label_is("request_group", "(brak grupy)");
 $sel->click_ok("save");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Flag Type 'SeleniumBugFlag3Test' Created");
-$sel->is_text_present_ok("The flag type SeleniumBugFlag3Test has been created.");
-$flagtype_url = $sel->get_attribute('link=SeleniumBugFlag3Test@href');
+$sel->title_is("Flaga „FlagaTestowa3” została utworzona");
+$sel->is_text_present_ok("Flaga FlagaTestowa3 została utworzona.");
+$flagtype_url = $sel->get_attribute('link=FlagaTestowa3@href');
 $flagtype_url =~ /id=(\d+)$/;
 my $flagtype3_id = $1;
 
-# We now create a flag type for attachments.
+# Tworzenie flagi dla załączników.
 
-$sel->click_ok("link=Create Flag Type For Attachments");
+$sel->click_ok("link=Utwórz flagę dla załączników");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Create Flag Type for Attachments");
-$sel->type_ok("name", "SeleniumAttachmentFlag1Test");
-$sel->type_ok("description", "attachmentflag1");
+$sel->title_is("Tworzenie flagi dla załączników");
+$sel->type_ok("name", "FlagaDlaZalacznikow1");
+$sel->type_ok("description", "flagadlazalacznikow1");
 $sel->select_ok("product", "label=TestProduct");
 $sel->click_ok("categoryAction-include");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Create Flag Type for Attachments");
+$sel->title_is("Tworzenie flagi dla załączników");
 $sel->remove_all_selections_ok("inclusion_to_remove");
 $sel->add_selection_ok("inclusion_to_remove", "label=__Any__:__Any__");
 $sel->click_ok("categoryAction-removeInclusion");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Create Flag Type for Attachments");
+$sel->title_is("Tworzenie flagi dla załączników");
 @inclusion = $sel->get_select_options("inclusion_to_remove");
-ok(scalar @inclusion == 1, "The inclusion list contains 1 element");
-ok($inclusion[0] eq "TestProduct:__Any__", "TestProduct:__Any__ is in the exclusion list");
+ok(scalar @inclusion == 1, "Lista dołączonych zawiera jeden element");
+ok($inclusion[0] eq "TestProduct:__Any__", "TestProduct:__Any__ znajduje się na liście dołączonych");
 $sel->type_ok("sortkey", "700");
 $sel->value_is("cc_list", "");
 $sel->select_ok("grant_group", "label=editbugs");
 $sel->select_ok("request_group", "label=canconfirm");
 $sel->click_ok("save");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Flag Type 'SeleniumAttachmentFlag1Test' Created");
-$sel->is_text_present_ok("The flag type SeleniumAttachmentFlag1Test has been created.");
-$flagtype_url = $sel->get_attribute('link=SeleniumAttachmentFlag1Test@href');
+$sel->title_is("Flaga „FlagaDlaZalacznikow1” została utworzona");
+$sel->is_text_present_ok("Flaga FlagaDlaZalacznikow1 została utworzona.");
+$flagtype_url = $sel->get_attribute('link=FlagaDlaZalacznikow1@href');
 $flagtype_url =~ /id=(\d+)$/;
 my $aflagtype1_id = $1;
 
-# Clone the flag type.
+# Kopiowanie flagi.
 
 $sel->click_ok("//a[\@href='editflagtypes.cgi?action=copy&id=$aflagtype1_id']");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Create Flag Type for Attachments Based on SeleniumAttachmentFlag1Test");
-$sel->type_ok("name", "SeleniumAttachmentFlag2Test");
-$sel->type_ok("description", "attachmentflag2");
+# Do poprawki po naprawieniu krowy 4251
+$sel->title_is("Tworzenie flagi dla załączników Na podstawie flagi „FlagaDlaZalacznikow1”");
+$sel->type_ok("name", "FlagaDlaZalacznikow2");
+$sel->type_ok("description", "flagadlazalacznikow2");
 @inclusion = $sel->get_select_options("inclusion_to_remove");
-ok(scalar @inclusion == 1, "The inclusion list contains 1 element");
-ok($inclusion[0] eq "TestProduct:__Any__", "TestProduct:__Any__ is in the exclusion list");
+ok(scalar @inclusion == 1, "Lista dołączonych zawiera jeden element");
+ok($inclusion[0] eq "TestProduct:__Any__", "TestProduct:__Any__ znajduje się na liście dołączonych");
 $sel->type_ok("sortkey", "750");
 $sel->type_ok("cc_list", $config->{admin_user_login});
 $sel->uncheck_ok("is_multiplicable");
-$sel->select_ok("grant_group", "label=(no group)");
-$sel->select_ok("request_group", "label=(no group)");
+$sel->select_ok("grant_group", "label=(brak grupy)");
+$sel->select_ok("request_group", "label=(brak grupy)");
 $sel->click_ok("save");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Flag Type 'SeleniumAttachmentFlag2Test' Created");
-$sel->is_text_present_ok("The flag type SeleniumAttachmentFlag2Test has been created.");
-$flagtype_url = $sel->get_attribute('link=SeleniumAttachmentFlag2Test@href');
+$sel->title_is("Flaga „FlagaDlaZalacznikow2” została utworzona");
+$sel->is_text_present_ok("Flaga FlagaDlaZalacznikow2 została utworzona.");
+$flagtype_url = $sel->get_attribute('link=FlagaDlaZalacznikow2@href');
 $flagtype_url =~ /id=(\d+)$/;
 my $aflagtype2_id = $1;
 
-# Clone the flag type again, and set it as inactive.
+# Kopiowanie flagi po raz kolejny i deaktywowanie jej.
 
 $sel->click_ok("//a[\@href='editflagtypes.cgi?action=copy&id=$aflagtype1_id']");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Create Flag Type for Attachments Based on SeleniumAttachmentFlag1Test");
-$sel->type_ok("name", "SeleniumAttachmentFlag3Test");
-$sel->type_ok("description", "attachmentflag3");
+$sel->title_is("Tworzenie flagi dla załączników Na podstawie flagi „FlagaDlaZalacznikow1”");
+$sel->type_ok("name", "FlagaDlaZalacznikow3");
+$sel->type_ok("description", "flagadlazalacznikow3");
 $sel->type_ok("sortkey", "800");
 $sel->uncheck_ok("is_active");
 $sel->click_ok("save");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Flag Type 'SeleniumAttachmentFlag3Test' Created");
-$sel->is_text_present_ok("The flag type SeleniumAttachmentFlag3Test has been created.");
-$flagtype_url = $sel->get_attribute('link=SeleniumAttachmentFlag3Test@href');
+$sel->title_is("Flaga „FlagaDlaZalacznikow3” została utworzona");
+$sel->is_text_present_ok("Flaga FlagaDlaZalacznikow3 została utworzona.");
+$flagtype_url = $sel->get_attribute('link=FlagaDlaZalacznikow3@href');
 $flagtype_url =~ /id=(\d+)$/;
 my $aflagtype3_id = $1;
 
-# All flag types have been created. Now "real" tests can start.
+# Utworzono wszystkie rodzaje flag. Teraz można testować.
 
 file_bug_in_product($sel, 'TestProduct');
-my $bug_summary = "test flags";
+my $bug_summary = "testowanie flag";
 $sel->type_ok("short_desc", $bug_summary);
-$sel->type_ok("comment", "this bug is used by Selenium to test flags");
-# Restrict the bug to the Master group. That's important for subsequent tests!
+$sel->type_ok("comment", "to jest błąd stworzony do testowania flag");
+# Błąd należy ograniczyć dla użytkowników w grupie Master. To będzie ważne w późniejszych testach!
 $sel->check_ok('//input[@name="groups" and @value="Master"]');
 my $bug1_id = create_bug($sel, $bug_summary);
 
-# All 3 bug flag types must be available; we are in the TestProduct product.
+# Wszystkie 3 flagi testowe muszą być dostępne; korzystamy z produktu TestProduct.
 
-$sel->is_text_present_ok("SeleniumBugFlag1Test");
-# We specify //select or //input, just to be sure. This is not required, though.
+$sel->is_text_present_ok("FlagaTestowa1");
+# Dla pewności wybieramy //select lub //input. Nie jest to konieczne.
 $sel->is_element_present_ok("//select[\@id='flag_type-$flagtype1_id']");
 $sel->is_element_present_ok("//input[\@id='requestee_type-$flagtype1_id']");
-# If fields are of the correct type above, we assume this is still true below.
-$sel->is_text_present_ok("SeleniumBugFlag2Test");
+# Jeśli powyższe pola są poprawne, zakładamy, że poniższe również.
+$sel->is_text_present_ok("FlagaTestowa2");
 $sel->is_element_present_ok("flag_type-$flagtype2_id");
 $sel->is_element_present_ok("requestee_type-$flagtype2_id");
-$sel->is_text_present_ok("SeleniumBugFlag3Test");
+$sel->is_text_present_ok("FlagaTestowa3");
 $sel->is_element_present_ok("flag_type-$flagtype3_id");
-ok(!$sel->is_element_present("requestee_type-$flagtype3_id"), "SeleniumBugFlag3Test is not specifically requestable");
+ok(!$sel->is_element_present("requestee_type-$flagtype3_id"), "FlagaTestowa3 nie ma pola prośby");
 
-# This is intentional to generate "flagmail". Some flags have a CC list
-# associated with them, some others don't. This is to catch crashes due to
-# the MTA.
+# To jest celowe do wygenerowania emaila z informacją o prośbie. Niektóre flagi
+# mają przypisaną do nich listę obserwatorów, niektóre nie. 
+# Poniższy fragment napisany jest do wykrywania błędów podczas MTA.
 
 $sel->select_ok("flag_type-$flagtype1_id", "label=?");
 $sel->select_ok("flag_type-$flagtype2_id", "label=?");
 $sel->select_ok("flag_type-$flagtype3_id", "label=?");
-$sel->type_ok("comment", "Setting all 3 flags to ?");
+$sel->type_ok("comment", "Ustawianie wszystkich trzech flag na ?");
 edit_bug_and_return($sel, $bug1_id, $bug_summary);
 
-# We need to store the new flag IDs.
+# Zapisywanie id flag.
 
-$sel->is_text_present_ok("$config->{admin_user_username}: SeleniumBugFlag1Test");
-my $flag1_1_id = $sel->get_attribute('//select[@title="bugflag1"]@id');
+$sel->is_text_present_ok("$config->{admin_user_username}: FlagaTestowa1");
+my $flag1_1_id = $sel->get_attribute('//select[@title="flagatestowa1"]@id');
 $flag1_1_id =~ s/flag-//;
-$sel->is_text_present_ok("$config->{admin_user_username}: SeleniumBugFlag2Test");
-my $flag2_1_id = $sel->get_attribute('//select[@title="bugflag2"]@id');
+$sel->is_text_present_ok("$config->{admin_user_username}: FlagaTestowa2");
+my $flag2_1_id = $sel->get_attribute('//select[@title="flagatestowa2"]@id');
 $flag2_1_id =~ s/flag-//;
-$sel->is_text_present_ok("$config->{admin_user_username}: SeleniumBugFlag3Test");
-my $flag3_1_id = $sel->get_attribute('//select[@title="bugflag3"]@id');
+$sel->is_text_present_ok("$config->{admin_user_username}: FlagaTestowa3");
+my $flag3_1_id = $sel->get_attribute('//select[@title="flagatestowa3"]@id');
 $flag3_1_id =~ s/flag-//;
-
-$sel->is_text_present_ok("addl. SeleniumBugFlag1Test");
-$sel->is_text_present_ok("addl. SeleniumBugFlag2Test");
-ok(!$sel->is_text_present("addl. SeleniumBugFlag3Test"), "SeleniumBugFlag3Test is not multiplicable");
+$sel->is_text_present_ok("Dodaj FlagaTestowa1");
+$sel->is_text_present_ok("Dodaj FlagaTestowa2");
+ok(!$sel->is_text_present("Dodaj FlagaTestowa3"), "FlagaTestowa3 nie jest flagą wielokrotną");
 $sel->select_ok("flag_type-$flagtype1_id", "label=+");
 $sel->select_ok("flag_type-$flagtype2_id", "label=-");
 edit_bug_and_return($sel, $bug1_id, $bug_summary);
 
-# Now let's test requestees. SeleniumBugFlag2Test requires the requestee
-# to be in the editbugs group.
+# Testy dotyczące grupy pytające. FlagaTestowa2 wymaga od pytającego
+# przynależności do grupy editbugs.
 
 $sel->select_ok("flag_type-$flagtype1_id", "label=?");
 $sel->type_ok("requestee_type-$flagtype1_id", $config->{admin_user_login});
@@ -248,184 +250,185 @@ $sel->select_ok("flag_type-$flagtype2_id", "label=?");
 $sel->type_ok("requestee_type-$flagtype2_id", $config->{unprivileged_user_login});
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Flag Requestee Not Authorized");
+$sel->title_is("Prośba o zweryfikowanie flagi do osoby bez uprawnień");
 $sel->go_back_ok();
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_like(qr/^Bug $bug1_id /);
+$sel->title_like(qr/^Błąd $bug1_id /);
 $sel->type_ok("requestee_type-$flagtype2_id", $config->{admin_user_login});
 edit_bug_and_return($sel, $bug1_id, $bug_summary);
 
-# Final tests for bug flags.
+# Ostatni test dla flag testowych.
 
 $sel->select_ok("flag-$flag1_1_id", "value=X");
 $sel->select_ok("flag-$flag2_1_id", "label=+");
 $sel->select_ok("flag-$flag3_1_id", "label=-");
 edit_bug_and_return($sel, $bug1_id, $bug_summary);
 
-# Now we test attachment flags.
+# Teraz testy dla flag dla załączników.
 
-$sel->click_ok("link=Add an attachment");
+$sel->click_ok("link=Dodaj załącznik");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Create New Attachment for Bug #$bug1_id");
-$sel->type_ok("data", "/var/www/html/selenium/bugzilla/patch.diff");
-$sel->type_ok("description", "patch, v1");
+$sel->title_is("Tworzenie załącznika do błędu #$bug1_id");
+# Musisz mieć w tym miejscu pli załącznika!
+$sel->type_ok("data", "/var/www/selenium/latka.diff");
+$sel->type_ok("description", "łatka, v1");
 $sel->check_ok("ispatch");
-$sel->is_text_present_ok("SeleniumAttachmentFlag1Test");
-$sel->is_text_present_ok("SeleniumAttachmentFlag2Test");
-ok(!$sel->is_text_present("SeleniumAttachmentFlag3Test"), "Inactive SeleniumAttachmentFlag3Test flag type not displayed");
+$sel->is_text_present_ok("FlagaDlaZalacznikow1");
+$sel->is_text_present_ok("FlagaDlaZalacznikow2");
+ok(!$sel->is_text_present("FlagaDlaZalacznikow3"), "Nieaktywna FlagaDlaZalacznikow3 nie jest wyświetlona");
 
-# Let's generate some "flagmail", first with no requestee.
+# Wygenerujmy maile z prośbą o flagę, najpierw bez pytającego.
 
 $sel->select_ok("flag_type-$aflagtype1_id", "label=?");
 $sel->select_ok("flag_type-$aflagtype2_id", "label=?");
-$sel->type_ok("comment", "patch for testing purposes only");
+$sel->type_ok("comment", "łatka wyłącznie dla celów testowych");
 edit_bug($sel, $bug1_id, $bug_summary, {id => "create"});
 
-# Store the flag ID.
+# Zapisanie ID flagi.
 
-my $alink = $sel->get_attribute('//a[@title="patch, v1"]@href');
+my $alink = $sel->get_attribute('//a[@title="łatka, v1"]@href');
 $alink =~ /id=(\d+)/;
 my $attachment1_id = $1;
 
-# Now create another attachment, and set requestees.
+# Dodawanie kolejnego załacznika, i ustawianie pytającego.
 
-$sel->click_ok("//a[contains(text(),'Create\n Another Attachment to Bug $bug1_id')]");
+$sel->click_ok("//a[contains(text(),'Utwórz\n kolejny załącznik do błędu $bug1_id')]");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Create New Attachment for Bug #$bug1_id");
-$sel->type_ok("data", "/var/www/html/selenium/bugzilla/patch.diff");
-$sel->type_ok("description", "patch, v2");
+$sel->title_is("Tworzenie załącznika do błędu #$bug1_id");
+$sel->type_ok("data", "/var/www/selenium/latka.diff");
+$sel->type_ok("description", "łatka, v2");
 $sel->check_ok("ispatch");
-# Mark the previous attachment as obsolete.
+# Zaznaczanie poprzedniego załącznika jako zdezaktualizowanego.
 $sel->check_ok($attachment1_id);
 $sel->select_ok("flag_type-$aflagtype1_id", "label=?");
 $sel->type_ok("requestee_type-$aflagtype1_id", $config->{admin_user_login});
 $sel->select_ok("flag_type-$aflagtype2_id", "label=?");
-# The requestee is not in the Master group, and so he cannot view the bug.
-# He must be silently skipped from the requestee field.
+# Proszący nie należy do grupy Master, w związku z czym nie ma dostępu do błędu.
+# Musi być po cichu pominięty w tym polu.
 $sel->type_ok("requestee_type-$aflagtype2_id", $config->{unprivileged_user_login});
-$sel->type_ok("comment", "second patch, with requestee");
+$sel->type_ok("comment", "druga łatka, z prośbą");
 edit_bug($sel, $bug1_id, $bug_summary, {id => "create"});
-$alink = $sel->get_attribute('//a[@title="patch, v2"]@href');
+$alink = $sel->get_attribute('//a[@title="łatka, v2"]@href');
 $alink =~ /id=(\d+)/;
 my $attachment2_id = $1;
 
-# Create a third attachment, but we now set the MIME type manually.
+# Dodawanie trzeciego załącznika. Tym razem typ zawartości wybieramy ręcznie.
 
-$sel->click_ok("//a[contains(text(),'Create\n Another Attachment to Bug $bug1_id')]");
+$sel->click_ok("//a[contains(text(),'Utwórz\n kolejny załącznik do błędu $bug1_id')]");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Create New Attachment for Bug #$bug1_id");
-$sel->type_ok("data", "/var/www/html/selenium/bugzilla/patch.diff");
-$sel->type_ok("description", "patch, v3");
+$sel->title_is("Tworzenie załącznika do błędu #$bug1_id");
+$sel->type_ok("data", "/var/www/selenium/latka.diff");
+$sel->type_ok("description", "łatka, v3");
 $sel->click_ok("list");
-$sel->select_ok("contenttypeselection", "label=plain text (text/plain)");
+$sel->select_ok("contenttypeselection", "label=dokument tekstowy (text/plain)");
 $sel->select_ok("flag_type-$aflagtype1_id", "label=+");
-$sel->type_ok("comment", "one +, the other one blank");
+$sel->type_ok("comment", "jeden +, drugi pusty");
 edit_bug($sel, $bug1_id, $bug_summary, {id => "create"});
-$alink = $sel->get_attribute('//a[@title="patch, v3"]@href');
+$alink = $sel->get_attribute('//a[@title="łatka, v3"]@href');
 $alink =~ /id=(\d+)/;
 my $attachment3_id = $1;
 
-# Display the bug and check flags are correctly set.
+# Wyświetlanie błędu i sprawdzanie, czy flagi są poprawnie ustawione.
 
-$sel->click_ok("link=bug $bug1_id");
+$sel->click_ok("link=błędu $bug1_id");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_like(qr/^Bug $bug1_id /);
-$sel->is_text_present_ok("$config->{admin_user_username}: SeleniumAttachmentFlag1Test? ($config->{admin_user_username})");
-$sel->is_text_present_ok("$config->{admin_user_username}: SeleniumAttachmentFlag2Test?");
-$sel->is_text_present_ok("$config->{admin_user_username}: SeleniumAttachmentFlag1Test+");
-# We marked the first attachment as obsolete, so it should have no flag on it.
-$sel->is_text_present_ok("no flags");
+$sel->title_like(qr/^Błąd $bug1_id /);
+$sel->is_text_present_ok("$config->{admin_user_username}: FlagaDlaZalacznikow1? ($config->{admin_user_username})");
+$sel->is_text_present_ok("$config->{admin_user_username}: FlagaDlaZalacznikow2?");
+$sel->is_text_present_ok("$config->{admin_user_username}: FlagaDlaZalacznikow1+");
+# Pierwszy załącznik został zaznaczony jako zdezaktualizowany, więc nie powinien mieć przypisanej flagi.
+$sel->is_text_present_ok("brak flag");
 
-# Make the bug public and log out.
+# Zmiana błędu na publiczny i wylogowanie.
 
 $sel->uncheck_ok('//input[@name="groups" and @value="Master"]');
 edit_bug($sel, $bug1_id, $bug_summary);
 logout($sel);
 
-# As an unprivileged user, try to edit flags.
+# Próba edycji flag przez użytkownika bez uprawnień.
 
 log_in($sel, $config, 'unprivileged');
 go_to_bug($sel, $bug1_id);
-# No privs are required to clear this flag.
+# Do zmiany tej flagi nie są potrzebne żadne uprawnienia.
 $sel->select_ok("flag-$flag3_1_id", "value=X");
 edit_bug_and_return($sel, $bug1_id, $bug_summary);
 
-# editbugs privs are required to clear this flag, so no other option
-# should be displayed besides the currently set "+".
+# Do zmiany poniższej flagi wymagana jest przynależność do grupy editbugs,
+# więc poza już ustawioną wartością "+" dla flagi, żadna inna nie powinna być wyświetlana.
 
 my @flag_states = $sel->get_select_options("flag-$flag2_1_id");
-ok(scalar(@flag_states) == 1 && $flag_states[0] eq '+', "Single flag state '+' available");
+ok(scalar(@flag_states) == 1 && $flag_states[0] eq '+', "Tylko jedna wartość dla tej flagi jest wyświetlana - '+'");
 
-# Powerless users cannot set the flag to +, but setting it to ? is allowed.
+# Użytkownicy bez uprawnień nie mogą zmianić wartości flagi na +, ale mogą je zmienić na ?.
 
 @flag_states = $sel->get_select_options("flag_type-$flagtype1_id");
-ok(scalar @flag_states == 2, "Two flag states available");
-ok(grep($_ eq '?', @flag_states), "Flag state '?' available");
+ok(scalar @flag_states == 2, "Dostępne są dwie wartości flagi");
+ok(grep($_ eq '?', @flag_states), "Dostępna jest wartość '?'");
 
-# A powerless user cannot edit someone else's attachment flags.
+# Użytkownik bez uprawnień nie może zmieniać flag dla załączników ustawionych przez kogoś innego.
 
 $sel->click_ok("//a[\@href='attachment.cgi?id=$attachment2_id&action=edit']");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Attachment $attachment2_id Details for Bug $bug1_id");
-ok(!$sel->is_element_present('//select[@title="attachmentflag2"]'),
-   "Attachment flags are not editable by a powerless user");
+$sel->title_is("Szczegóły załącznika $attachment2_id do błędu $bug1_id");
+ok(!$sel->is_element_present('//select[@title="flagadlazalacznikow2"]'),
+   "Użytkownik bez uprawnień nie może edytować flag dla załączników");
 
-# Add an attachment and set flags on it.
+# Dodawanie załącznika i ustawianie dla niego flagi.
 
-$sel->click_ok("link=Bug $bug1_id");
+$sel->click_ok("link=błędu $bug1_id");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_like(qr/^Bug $bug1_id/);
-$sel->click_ok("link=Add an attachment");
+$sel->title_like(qr/^Błąd $bug1_id/);
+$sel->click_ok("link=Dodaj załącznik");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Create New Attachment for Bug #$bug1_id");
-$sel->type_ok("data", "/var/www/html/selenium/bugzilla/patch.diff");
-$sel->type_ok("description", "patch, v4");
+$sel->title_is("Tworzenie załącznika do błędu #$bug1_id");
+$sel->type_ok("data", "/var/www/selenium/latka.diff");
+$sel->type_ok("description", "łatka, v4");
 $sel->value_is("ispatch", "off");
 $sel->value_is("autodetect", "on");
 
-# canconfirm/editbugs privs are required to edit this flag.
+# do edycji tego błędu wymagana jest przynależność do jednej z grup: canconfirm/editbugs.
 
-ok(!$sel->is_editable("flag_type-$aflagtype1_id"), "Flag type non editable by powerless users");
+ok(!$sel->is_editable("flag_type-$aflagtype1_id"), "Użytkownik bez uprawnień nie może edytować flagi");
 
-# No privs are required to edit this flag.
+# Do zmiany tej flagi nie są potrzebne żadne uprawnienia.
 
 $sel->select_ok("flag_type-$aflagtype2_id", "label=+");
-$sel->type_ok("comment", "granting again");
+$sel->type_ok("comment", "odpowiadam po raz kolejny");
 edit_bug_and_return($sel, $bug1_id, $bug_summary, {id => "create"});
-$sel->is_text_present_ok("$config->{unprivileged_user_username}: SeleniumAttachmentFlag2Test+");
+$sel->is_text_present_ok("$config->{unprivileged_user_username}: FlagaDlaZalacznikow2+");
 logout($sel);
 
-# Final tests as an admin. He has editbugs privs, so he can edit
-# someone else's patch.
+# Ostatni test dla administratora. Ma uprawnienia do edycji błędów, więc może
+# edytować łatki innych użytkowników.
 
 log_in($sel, $config, 'admin');
 go_to_bug($sel, $bug1_id);
 $sel->click_ok("//a[\@href='attachment.cgi?id=${attachment3_id}&action=edit']");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Attachment $attachment3_id Details for Bug $bug1_id");
-$sel->select_ok('//select[@title="attachmentflag1"]', "label=+");
+$sel->title_is("Szczegóły załącznika $attachment3_id do błędu $bug1_id");
+$sel->select_ok('//select[@title="flagadlazalacznikow1"]', "label=+");
 edit_bug($sel, $bug1_id, $bug_summary, {id => "update"});
 
-# It's time to delete all created flag types.
+# Usuwanie wszystkich utworzonych flag.
 
 go_to_admin($sel);
-$sel->click_ok("link=Flags");
+$sel->click_ok("link=Flagi");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Administer Flag Types");
+$sel->title_is("Zarządzanie flagami");
 
-foreach my $flagtype ([$flagtype1_id, "SeleniumBugFlag1Test"], [$flagtype2_id, "SeleniumBugFlag2Test"],
-                      [$flagtype3_id, "SeleniumBugFlag3Test"], [$aflagtype1_id, "SeleniumAttachmentFlag1Test"],
-                      [$aflagtype2_id, "SeleniumAttachmentFlag2Test"], [$aflagtype3_id, "SeleniumAttachmentFlag3Test"])
+foreach my $flagtype ([$flagtype1_id, "FlagaTestowa1"], [$flagtype2_id, "FlagaTestowa2"],
+                      [$flagtype3_id, "FlagaTestowa3"], [$aflagtype1_id, "FlagaDlaZalacznikow1"],
+                      [$aflagtype2_id, "FlagaDlaZalacznikow2"], [$aflagtype3_id, "FlagaDlaZalacznikow3"])
 {
     my $flag_id = $flagtype->[0];
     my $flag_name = $flagtype->[1];
     $sel->click_ok("//a[\@href='editflagtypes.cgi?action=confirmdelete&id=$flag_id']");
     $sel->wait_for_page_to_load_ok(WAIT_TIME);
-    $sel->title_is("Confirm Deletion of Flag Type '$flag_name'");
-    $sel->click_ok("link=Yes, delete");
+    $sel->title_is("Potwierdzenie usunięcia flagi „$flag_name”");
+    $sel->click_ok("link=Tak");
     $sel->wait_for_page_to_load_ok(WAIT_TIME);
-    $sel->title_is("Flag Type '$flag_name' Deleted");
+    $sel->title_is("Usunięto flagę „$flag_name”");
     my $msg = trim($sel->get_text("message"));
-    ok($msg eq "The flag type $flag_name has been deleted.", "Flag type $flag_name deleted");
+    ok($msg eq "Flaga $flag_name została usunięta.", "Flaga $flag_name została usunięta");
 }
 logout($sel);
