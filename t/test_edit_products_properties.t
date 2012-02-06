@@ -1,6 +1,7 @@
 use strict;
 use warnings;
 use lib qw(lib);
+use utf8;
 
 use Test::More "no_plan";
 
@@ -13,169 +14,169 @@ my $unprivileged_user_login = $config->{unprivileged_user_login};
 my $permanent_user = $config->{permanent_user};
 
 log_in($sel, $config, 'admin');
-set_parameters($sel, { "Bug Fields"              => {"useclassification-off" => undef,
+set_parameters($sel, { "Pola błędu"              => {"useclassification-off" => undef,
                                                      "usetargetmilestone-on" => undef},
-                       "Administrative Policies" => {"allowbugdeletion-on"   => undef}
+                       "Reguły administracyjne"  => {"allowbugdeletion-on"   => undef}
                      });
 
-# Create a product and add components to it. Do some cleanup first
-# if the script failed during a previous run.
+# Tworzenie produktu i dodanie to niego komponentów. 
+# Najpierw porządki, na wypadek gdyby test padł przy poprzednim uruchomieniu
 
 go_to_admin($sel);
-$sel->click_ok("link=Products");
+$sel->click_ok("link=Produkty");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-# No risk to get the "Select classification" page. We turned off useclassification.
-$sel->title_is("Select product");
+# Nie ma możliwości, że otworzy się strona 'Wybierz kategorię'. Wyłączyliśmy możliwość kategoryzacji
+$sel->title_is("Modyfikowanie produktów");
 
 my $text = trim($sel->get_text("bugzilla-body"));
-if ($text =~ /(Kill me!|Kill me nicely)/) {
+if ($text =~ /(Zabij mnie|Dobij mnie)/) {
     my $product = $1;
     my $escaped_product = url_quote($product);
     $sel->click_ok("//a[\@href='editproducts.cgi?action=del&product=$escaped_product']");
     $sel->wait_for_page_to_load_ok(WAIT_TIME);
-    $sel->title_is("Delete Product '$product'");
+    $sel->title_is("Usuwanie produktu „$product”");
     $sel->click_ok("delete");
     $sel->wait_for_page_to_load_ok(WAIT_TIME);
-    $sel->title_is("Product Deleted");
+    $sel->title_is("Usunięto produkt");
 }
 
-$sel->click_ok("link=Add");
+$sel->click_ok("link=Dodaj produkt");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Add Product");
-$sel->type_ok("product", "Kill me!");
-$sel->type_ok("description", "I will disappear very soon. Do not add bugs to it.");
+$sel->title_is("Dodawanie produktu");
+$sel->type_ok("product", "Zabij mnie");
+$sel->type_ok("description", "Niedługo zniknę. Nie twórz błędów dla mnie");
 $sel->type_ok("defaultmilestone", "0.1a");
-# Since Bugzilla 4.0, the voting system is in an extension.
+# Od wydania 4.0 Bugzilli, system głosowania jest obsługiwany przez wtyczkę.
 if ($config->{test_extensions}) {
     $sel->type_ok("votesperuser", "1");
     $sel->type_ok("maxvotesperbug", "1");
     $sel->type_ok("votestoconfirm", "10");
 }
 $sel->type_ok("version", "0.1a");
-$sel->click_ok("//input[\@value='Add']");
+$sel->click_ok("//input[\@value='Dodaj']");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $text = trim($sel->get_text("message"));
-ok($text =~ /You will need to add at least one component before anyone can enter bugs against this product/,
-   "Display a reminder about missing components");
-$sel->click_ok("link=add at least one component");
+ok($text =~ /Należy dodać co najmniej jeden komponent, zanim ktokolwiek będzie mógł zgłaszać błędy w tym produkcie/,
+   "Przypominacz o brakujących komponentach");
+$sel->click_ok("link=dodać co najmniej jeden komponent");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Add component to the Kill me! product");
-$sel->type_ok("component", "first comp");
-$sel->type_ok("description", "comp 1");
+$sel->title_is("Dodawanie komponentu do produktu „Zabij mnie”");
+$sel->type_ok("component", "komponent pierwszy");
+$sel->type_ok("description", "komp 1");
 $sel->type_ok("initialowner", $admin_user_login);
 $sel->click_ok("create");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Component Created");
+$sel->title_is("Utworzono komponent");
 $text = trim($sel->get_text("message"));
-ok($text eq 'The component first comp has been created.', "Component successfully created");
+ok($text eq 'Komponent komponent pierwszy został utworzony.', "Utworzono komponent");
 
-# Try creating a second component with the same name.
+# Próba utworzenia kolejnego komponentu o tej samej nazwie.
 
-$sel->click_ok("link=Add");
+$sel->click_ok("link=Dodaj nowy komponent do produktu „Zabij mnie”");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Add component to the Kill me! product");
-$sel->type_ok("component", "first comp");
-$sel->type_ok("description", "comp 2");
+$sel->title_is("Dodawanie komponentu do produktu „Zabij mnie”");
+$sel->type_ok("component", "komponent pierwszy");
+$sel->type_ok("description", "komp 2");
 $sel->type_ok("initialowner", $admin_user_login);
 $sel->click_ok("create");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Component Already Exists");
+$sel->title_is("Komponent już istnieje");
 
-# Now really create a second component, with a distinct name.
+# Tworzenie kolejnego komponentu - tym razem o innej nazwie.
 
 $sel->go_back_ok();
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->type_ok("component", "second comp");
+$sel->type_ok("component", "komponent drugi");
 # FIXME - Re-enter the default assignee (regression due to bug 577574)
 $sel->type_ok("initialowner", $admin_user_login);
 $sel->type_ok("initialcc", $permanent_user);
 $sel->click_ok("create");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Component Created");
+$sel->title_is("Utworzono komponent");
 
-# Add a new version.
+# Dodawanie nowej wersji.
 
-edit_product($sel, "Kill me!");
-$sel->click_ok("//a[contains(text(),'Edit\nversions:')]");
+edit_product($sel, "Zabij mnie");
+$sel->click_ok("//a[contains(text(),'Modyfikuj\nwersje:')]");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Select version of product 'Kill me!'");
-$sel->click_ok("link=Add");
+$sel->title_is("Modyfikowanie wersji produktu „Zabij mnie”");
+$sel->click_ok("link=Dodaj wersję");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->type_ok("version", "0.1");
 $sel->click_ok("create");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Version Created");
+$sel->title_is("Utworzono wersję");
 
-# Add a new milestone.
+# Dodawanie nowej wersji docelowej.
 
-$sel->click_ok("link='Kill me!'");
+$sel->click_ok("link=Modyfikuj produkt „Zabij mnie”");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Edit Product 'Kill me!'");
-$sel->click_ok("link=Edit milestones:");
+$sel->title_is("Modyfikowanie produktu „Zabij mnie”");
+$sel->click_ok("link=Modyfikuj wersje docelowe:");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Select milestone of product 'Kill me!'");
-$sel->click_ok("link=Add");
+$sel->title_is("Modyfikowanie wersji docelowych produktu „Zabij mnie”");
+$sel->click_ok("link=Dodaj wersję docelową");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Add Milestone to Product 'Kill me!'");
+$sel->title_is("Dodawanie wersji docelowej do produktu „Zabij mnie”");
 $sel->type_ok("milestone", "0.2");
 $sel->type_ok("sortkey", "2");
 $sel->click_ok("create");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Milestone Created");
+$sel->title_is("Utworzono wersję docelową");
 
-# Add another milestone.
+# Dodawanie kolejnej wersji docelowej.
 
-$sel->click_ok("link=Add");
+$sel->click_ok("link=Dodaj wersję docelową");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Add Milestone to Product 'Kill me!'");
+$sel->title_is("Dodawanie wersji docelowej do produktu „Zabij mnie”");
 $sel->type_ok("milestone", "0.1a");
-# Negative sortkeys are valid for milestones.
+# Ujemne klucze sortowania są poprawne.
 $sel->type_ok("sortkey", "-2");
 $sel->click_ok("create");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Milestone Already Exists");
+$sel->title_is("Wersja docelowa już istnieje");
 $sel->go_back_ok();
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->type_ok("milestone", "pre-0.1");
 $sel->click_ok("create");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Milestone Created");
+$sel->title_is("Utworzono wersję docelową");
 
-# Now create an UNCONFIRMED bug and add it to the newly created product.
+# Tworzenie błędu ze statusem NIEPOTWIERDZONY i dodawanie go do nowego produktu.
 
-file_bug_in_product($sel, "Kill me!");
+file_bug_in_product($sel, "Zabij mnie");
 $sel->select_ok("version", "label=0.1a");
-$sel->select_ok("component", "label=first comp");
-# UNCONFIRMED must be present.
-$sel->select_ok("bug_status", "label=UNCONFIRMED");
+$sel->select_ok("component", "label=komponent pierwszy");
+# Status NIEPOTWIERDZONY musi być widoczny
+$sel->select_ok("bug_status", "label=NIEPOTWIERDZONY");
 $sel->type_ok("cc", $unprivileged_user_login);
 $sel->type_ok("bug_file_loc", "http://www.test.com");
-my $bug_summary = "test create/edit product properties";
+my $bug_summary = "sprawdzanie dodawania/edycji właściwości produktu";
 $sel->type_ok("short_desc", $bug_summary);
-$sel->type_ok("comment", "this bug will soon be dead");
+$sel->type_ok("comment", "ten błąd wkrótce zniknie");
 my $bug1_id = create_bug($sel, $bug_summary);
 my @cc_list = $sel->get_select_options("cc");
-ok(grep($_ eq $unprivileged_user_login, @cc_list), "$unprivileged_user_login correctly added to the CC list");
-ok(!grep($_ eq $permanent_user, @cc_list), "$permanent_user not in the CC list for 'first comp' by default");
+ok(grep($_ eq $unprivileged_user_login, @cc_list), "Użytkownik $unprivileged_user_login został dodany do listy obserwatorów");
+ok(!grep($_ eq $permanent_user, @cc_list), "Użytkownik $permanent_user nie znajduje się domyślnie na liście obserwatorów komponentu pierwszego");
 
-# File a second bug, and make sure users in the default CC list are added.
-file_bug_in_product($sel, "Kill me!");
+# Tworzenie kolejnego błędu i sprawdzania, czy domyślni obserwatorzy są dodawani
+file_bug_in_product($sel, "Zabij mnie");
 $sel->select_ok("version", "label=0.1a");
-$sel->select_ok("component", "label=second comp");
-my $bug_summary2 = "check default CC list";
+$sel->select_ok("component", "label=komponent drugi");
+my $bug_summary2 = "sprawdzanie dodawania domyślnych obserwatorów";
 $sel->type_ok("short_desc", $bug_summary2);
-$sel->type_ok("comment", "is the CC list populated correctly?");
+$sel->type_ok("comment", "czy lista obserwatorów jest poprawnie dodawana?");
 create_bug($sel, $bug_summary2);
 @cc_list = $sel->get_select_options("cc");
-ok(grep($_ eq $permanent_user, @cc_list), "$permanent_user in the CC list for 'second comp' by default");
+ok(grep($_ eq $permanent_user, @cc_list), "Użytkownik $permanent_user znajduje się domyślnie na liście obserwatorów komponentu drugiego");
 
-# Edit product properties and set votes_to_confirm to 0, which has
-# the side-effect to disable auto-confirmation (new behavior compared
-# to Bugzilla 3.4 and older).
+# Edycja właściwości produktu i ustawianie automatycznego potwierdzenia błędów na 0.
+# W rezultacie automatyczne potwierdzanie błędów przez głosowanie zostanie wyłączone.
+# To jest nowe zachowanie, odmienne od tego w wersjach Bugzilli 3.4 i starszych
 
-edit_product($sel, "Kill me!");
-$sel->type_ok("product", "Kill me nicely");
-$sel->type_ok("description", "I will disappear very soon. Do not add bugs to it (except for testing).");
+edit_product($sel, "Zabij mnie");
+$sel->type_ok("product", "Dobij mnie");
+$sel->type_ok("description", "Niedługo zniknę. Nie twórz błędów dla mnie (chyba, że do testów).");
 $sel->select_ok("defaultmilestone", "label=0.2");
 if ($config->{test_extensions}) {
     $sel->type_ok("votesperuser", "2");
@@ -184,152 +185,153 @@ if ($config->{test_extensions}) {
 }
 $sel->click_ok("update-product");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Updating Product 'Kill me nicely'");
-$sel->is_text_present_ok("Updated product name from 'Kill me!' to 'Kill me nicely'");
-$sel->is_text_present_ok("Updated description");
-$sel->is_text_present_ok("Updated default milestone");
+$sel->title_is("Aktualizacja produktu „Dobij mnie”");
+$sel->is_text_present_ok("Zaktualizowano nazwę produktu z „Zabij mnie” na „Dobij mnie”");
+$sel->is_text_present_ok("Zmieniono opis");
+$sel->is_text_present_ok("Zaktualizowano domyślną wersję docelową produktu");
 if ($config->{test_extensions}) {
-    $sel->is_text_present_ok("Updated votes per user");
-    $sel->is_text_present_ok("Updated maximum votes per bug");
-    $sel->is_text_present_ok("Updated number of votes needed to confirm a bug");
+    $sel->is_text_present_ok("Zaktualizowano liczbę głosów użytkownika");
+    $sel->is_text_present_ok("Zaktualizowano maksymalną liczbę głosów na błąd");
+    $sel->is_text_present_ok("Zaktualizowano liczbę głosów wymaganą do potwierdzenia błędu");
     $text = trim($sel->get_text("bugzilla-body"));
-    # We use .{1} in place of the right arrow character, which fails otherwise.
-    ok($text =~ /Checking unconfirmed bugs in this product for any which now have sufficient votes\.{3} .{1}there were none/,
-       "No bugs confirmed by popular votes (votestoconfirm = 0 disables auto-confirmation)");
+    # Używamy .{1} zamiast symbolu strzałki w prawo, w przeciwnym wypadku test pada.
+    ok($text =~ /Wyszukiwanie niepotwierdzonych błędów w tym produkcie w poszukiwaniu tych, które po zmianach ustawień głosowania mają wystarczającą liczbę głosów do potwierdzenia\.{3} .{1}nie znaleziono/,
+       "Nie znaleziono żadnych błędów potwierdzonych głosowaniem (ustawienie votestoconfirm = 0 wyłącza opcję automatycznego potwierdzania błędów)");
 
-    # Now set votestoconfirm to 2, vote for a bug, and then set
-    # this attribute back to 1, to trigger auto-confirmation.
+    # Zmiana ilości głosów potrzebnych do automatycznego potwierdzenia błędów na 2
+    # Głosowanie na błąd i kolejna zmiana ilości głosów na 1
+    # Chodzi o wywołanie automatycznego potwierdzenia błędu    
 
-    $sel->click_ok("link=Kill me nicely");
+    $sel->click_ok("link=Dobij mnie");
     $sel->wait_for_page_to_load_ok(WAIT_TIME);
-    $sel->title_is("Edit Product 'Kill me nicely'", "Display properties of Kill me nicely");
+    $sel->title_is("Modyfikowanie produktu „Dobij mnie”", "Wyświetlanie właściwości produktu 'Dobij mnie'");
     $sel->type_ok("votestoconfirm", 2);
     $sel->click_ok("update-product");
     $sel->wait_for_page_to_load_ok(WAIT_TIME);
-    $sel->title_is("Updating Product 'Kill me nicely'");
-    $sel->is_text_present_ok("Updated number of votes needed to confirm a bug");
+    $sel->title_is("Aktualizacja produktu „Dobij mnie”");
+    $sel->is_text_present_ok("Zaktualizowano liczbę głosów wymaganą do potwierdzenia błędu");
 
     go_to_bug($sel, $bug1_id);
-    $sel->click_ok("link=vote");
+    $sel->click_ok("link=głosuj");
     $sel->wait_for_page_to_load_ok(WAIT_TIME);
-    $sel->title_is("Change Votes");
+    $sel->title_is("Zmiana liczby głosów");
     $sel->type_ok("bug_$bug1_id", 1);
     $sel->click_ok("change");
     $sel->wait_for_page_to_load_ok(WAIT_TIME);
-    $sel->title_is("Change Votes");
-    $sel->is_text_present_ok("The changes to your votes have been saved");
+    $sel->title_is("Zmiana liczby głosów");
+    $sel->is_text_present_ok("Zmiana głosów została zapisana");
 
-    edit_product($sel, "Kill me nicely");
+    edit_product($sel, "Dobij mnie");
     $sel->type_ok("votestoconfirm", 1);
     $sel->click_ok("update-product");
     $sel->wait_for_page_to_load_ok(WAIT_TIME);
-    $sel->title_is("Updating Product 'Kill me nicely'");
-    $sel->is_text_present_ok("Updated number of votes needed to confirm a bug");
+    $sel->title_is("Aktualizacja produktu „Dobij mnie”");
+    $sel->is_text_present_ok("Zaktualizowano liczbę głosów wymaganą do potwierdzenia błędu");
     $text = trim($sel->get_text("bugzilla-body"));
-    ok($text =~ /Bug $bug1_id confirmed by number of votes/, "Bug $bug1_id is confirmed by popular votes");
+    ok($text =~ /Błąd $bug1_id został potwierdzony przez liczbę głosów/, "Błąd $bug1_id został potwierdzony liczbą głosów");
 }
- 
-# Edit the bug.
+
+# Edycja błędu.
 
 go_to_bug($sel, $bug1_id);
-$sel->selected_label_is("product", "Kill me nicely");
-$sel->selected_label_is("bug_status", "CONFIRMED") if $config->{test_extensions};
+$sel->selected_label_is("product", "Dobij mnie");
+$sel->selected_label_is("bug_status", "POTWIERDZONY") if $config->{test_extensions};
 $sel->select_ok("target_milestone", "label=pre-0.1");
-$sel->select_ok("component", "label=second comp");
+$sel->select_ok("component", "label=komponent drugi");
 edit_bug_and_return($sel, $bug1_id, $bug_summary);
 @cc_list = $sel->get_select_options("cc");
-ok(grep($_ eq $permanent_user, @cc_list), "User $permanent_user automatically added to the CC list");
+ok(grep($_ eq $permanent_user, @cc_list), "Użytkownik $permanent_user jest automatycznie dodawany do listy obserwatorów");
 
-# Delete the milestone the bug belongs to. This should retarget the bug
-# to the default milestone.
+# Usuwanie wersji docelowej, do której błąd jest przypisany.
+# Błąd powinien zostać automatycznie przeniesiony do domyślnej wersji docelowej.
 
-edit_product($sel, "Kill me nicely");
-$sel->click_ok("link=Edit milestones:");
+edit_product($sel, "Dobij mnie");
+$sel->click_ok("link=Modyfikuj wersje docelowe:");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Select milestone of product 'Kill me nicely'");
-$sel->click_ok('//a[@href="editmilestones.cgi?action=del&product=Kill%20me%20nicely&milestone=pre-0.1"]');
+$sel->title_is("Modyfikowanie wersji docelowych produktu „Dobij mnie”");
+$sel->click_ok('//a[@href="editmilestones.cgi?action=del&product=Dobij%20mnie&milestone=pre-0.1"]');
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Delete Milestone of Product 'Kill me nicely'");
+$sel->title_is("Usuwanie wersji docelowej produktu „Dobij mnie”");
 $text = trim($sel->get_text("bugzilla-body"));
-ok($text =~ /There is 1 bug entered for this milestone/, "Warning displayed");
-ok($text =~ /Do you really want to delete this milestone\?/, "Requesting confirmation");
+ok($text =~ /Istnieje 1 otwarty błąd dla tej wersji docelowej/, "Wyświetlenie ostrzeżenia");
+ok($text =~ /Czy na pewno chcesz usunąć tę wersję docelową\?/, "Wymaganie potwierdzenia");
 $sel->click_ok("delete");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Milestone Deleted");
+$sel->title_is("Usunięto wersję docelową");
 $text = trim($sel->get_text("message"));
-ok($text =~ /Bugs targetted to this milestone have been retargetted to the default milestone/, "Bug retargetted");
+ok($text =~ /Błędy przypisane do tej wersji docelowej zostały przypisane do domyślnej wersji docelowej/, "Błędy zostały przeniesione");
 
-# Try deleting the version used by the bug. This action must be rejected.
+# Próba usunięcia wersji, do której błąd jest przypisany. Usunięcie nie powinno być możliwe.
 
-$sel->click_ok("link='Kill me nicely'");
+$sel->click_ok("link=Modyfikuj produkt „Dobij mnie”");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Edit Product 'Kill me nicely'");
-$sel->click_ok("//a[contains(text(),'Edit\nversions:')]");
+$sel->title_is("Modyfikowanie produktu „Dobij mnie”");
+$sel->click_ok("//a[contains(text(),'Modyfikuj\nwersje:')]");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Select version of product 'Kill me nicely'");
-$sel->click_ok("//a[contains(\@href, 'editversions.cgi?action=del&product=Kill%20me%20nicely&version=0.1a')]");
+$sel->title_is("Modyfikowanie wersji produktu „Dobij mnie”");
+$sel->click_ok("//a[contains(\@href, 'editversions.cgi?action=del&product=Dobij%20mnie&version=0.1a')]");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Delete Version of Product 'Kill me nicely'");
+$sel->title_is("Usuwanie wersji produktu „Dobij mnie”");
 $text = trim($sel->get_text("bugzilla-body"));
-ok($text =~ /Sorry, there are 2 bugs outstanding for this version/, "Rejecting version deletion");
+ok($text =~ /W tej wersji nadal znajdują się błędy: 2/, "Odmowa usunięcia wersji");
 $sel->go_back_ok();
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 
-# Delete an unused version. The action must succeed.
+# Próba usunięcia wersji bez przypisanych błędów. Nie powinno być problemów.
 
-$sel->click_ok('//a[@href="editversions.cgi?action=del&product=Kill%20me%20nicely&version=0.1"]');
+$sel->click_ok('//a[@href="editversions.cgi?action=del&product=Dobij%20mnie&version=0.1"]');
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Delete Version of Product 'Kill me nicely'");
+$sel->title_is("Usuwanie wersji produktu „Dobij mnie”");
 $text = trim($sel->get_text("bugzilla-body"));
-ok($text =~ /Do you really want to delete this version\?/, "Requesting confirmation");
+ok($text =~ /Czy na pewno chcesz usunąć tę wersję\?/, "Wymaganie potwierdzenia");
 $sel->click_ok("delete");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Version Deleted");
+$sel->title_is("Usunięto wersję");
 
-# Delete the component the bug belongs to. The action must succeed.
+# Usuwanie komponentu, do którego przypisany jest błąd. Nie powinno być problemów.
 
-$sel->click_ok("link='Kill me nicely'");
+$sel->click_ok("link=Modyfikuj produkt „Dobij mnie”");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Edit Product 'Kill me nicely'");
-$sel->click_ok("link=Edit components:");
+$sel->title_is("Modyfikowanie produktu „Dobij mnie”");
+$sel->click_ok("link=Modyfikuj komponenty:");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Select component of product 'Kill me nicely'");
-$sel->click_ok("//a[contains(\@href, 'editcomponents.cgi?action=del&product=Kill%20me%20nicely&component=second%20comp')]");
+$sel->title_is("Modyfikowanie komponentów produktu „Dobij mnie”");
+$sel->click_ok("//a[contains(\@href, 'editcomponents.cgi?action=del&product=Dobij%20mnie&component=komponent%20drugi')]");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Delete component 'second comp' from 'Kill me nicely' product");
+$sel->title_is("Usuwanie komponentu „komponent drugi” z produktu „Dobij mnie”");
 $text = trim($sel->get_text("bugzilla-body"));
-ok($text =~ /There are 2 bugs entered for this component/, "Warning displayed");
-ok($text =~ /Do you really want to delete this component\?/, "Requesting confirmation");
+ok($text =~ /W tym komponencie są otwarte błędy: 2/, "Wyświetlenie ostrzeżenia");
+ok($text =~ /Czy na pewno chcesz usunąć ten komponent\?/, "Wymaganie potwierdzenia");
 $sel->click_ok("delete");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Component Deleted");
+$sel->title_is("Usunięto komponent");
 $text = trim($sel->get_text("bugzilla-body"));
-ok($text =~ /The component second comp has been deleted/, "Component deletion confirmed");
-ok($text =~ /All bugs being in this component and all references to them have also been deleted/,
-   "Bug deletion confirmed");
+ok($text =~ /Komponent komponent drugi został usunięty/, "Potwierdzenie usunięcia komponentu");
+ok($text =~ /Wszystkie błędy znajdujące się w tym komponencie i wszystkie odniesienia do niego zostały także usunięte/,
+   "Potwierdzenie usunięcia błędów");
 
-# Only one value for component, version and milestone available. They should
-# be selected by default.
+# W tej chwili pozostał tylko jeden komponent, wersja oraz wersja docelowa w tym produkcie.
+# Przy tworzeniu nowego błędu powinny być domyślnie wybierane.
 
-file_bug_in_product($sel, "Kill me nicely");
-$bug_summary2 = "bye bye everybody!";
+file_bug_in_product($sel, "Dobij mnie");
+$bug_summary2 = "żegnajcie wszyscy!";
 $sel->type_ok("short_desc", $bug_summary2);
-$sel->type_ok("comment", "I'm dead :(");
+$sel->type_ok("comment", "Umarłem :(");
 create_bug($sel, $bug_summary2);
 
-# Now delete the product.
+# Usuwanie produktu
 
 go_to_admin($sel);
-$sel->click_ok("link=Products");
+$sel->click_ok("link=Produkty");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Select product");
-$sel->click_ok("//a[\@href='editproducts.cgi?action=del&product=Kill%20me%20nicely']");
+$sel->title_is("Modyfikowanie produktów");
+$sel->click_ok("//a[\@href='editproducts.cgi?action=del&product=Dobij%20mnie']");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Delete Product 'Kill me nicely'");
+$sel->title_is("Usuwanie produktu „Dobij mnie”");
 $text = trim($sel->get_text("bugzilla-body"));
-ok($text =~ /There is 1 bug entered for this product/, "Warning displayed");
-ok($text =~ /Do you really want to delete this product\?/, "Confirmation request displayed");
+ok($text =~ /Nadal istnieje 1 otwarty błąd dla tego produktu/, "Wyświetlenie ostrzeżenia");
+ok($text =~ /Czy na pewno chcesz usunąć ten produkt\?/, "Wymaganie potwierdzenia");
 $sel->click_ok("delete");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Product Deleted");
+$sel->title_is("Usunięto produkt");
 logout($sel);
