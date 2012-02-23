@@ -5,13 +5,14 @@ use lib qw(lib);
 use Test::More "no_plan";
 
 use QA::Util;
+use utf8;
 
 my ($sel, $config) = get_selenium();
 
 # Turn on 'requirelogin'.
 
 log_in($sel, $config, 'admin');
-set_parameters($sel, { "User Authentication" => {"requirelogin-on" => undef} });
+set_parameters($sel, { "Uwierzytelnianie użytkowników" => {"requirelogin-on" => undef} });
 logout($sel);
 
 # We try to access each page. None of the ones listed below should
@@ -29,10 +30,10 @@ my @pages = qw(admin attachment buglist chart colchange describecomponents
 foreach my $page (@pages) {
     $sel->open_ok("/$config->{bugzilla_installation}/${page}.cgi");
     if ($page ne 'votes' || $config->{test_extensions}) {
-        $sel->title_is("Log in to Bugzilla");
+        $sel->title_is("Logowanie do Bugzilli");
     }
     else {
-        $sel->title_is("Extension Disabled");
+        $sel->title_is("Rozszerzenie jest wyłączone");
     }
 }
 
@@ -44,10 +45,10 @@ foreach my $page (@pages) {
 foreach my $page (@pages) {
     $sel->open_ok("/$config->{bugzilla_installation}/$page");
     if ($page !~ /^votes/ || $config->{test_extensions}) {
-        $sel->title_is("Log in to Bugzilla");
+        $sel->title_is("Logowanie do Bugzilli");
     }
     else {
-        $sel->title_is("Extension Disabled");
+        $sel->title_is("Rozszerzenie jest wyłączone");
     }
 }
 
@@ -58,16 +59,16 @@ foreach my $page (@pages) {
 
 foreach my $page (@pages) {
     $sel->open_ok("/$config->{bugzilla_installation}/$page");
-    $sel->title_isnt("Log in to Bugzilla");
+    $sel->title_isnt("Logowanie do Bugzilli");
 }
 
 # Turn off 'requirelogin'.
 
 log_in($sel, $config, 'admin');
-set_parameters($sel, { "User Authentication" => {"requirelogin-off" => undef} });
+set_parameters($sel, { "Uwierzytelnianie użytkowników" => {"requirelogin-off" => undef} });
 logout($sel);
 
 # Make sure we can access random pages again.
-$sel->click_ok("link=Search");
+$sel->click_ok("link=Wyszukiwanie");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_isnt("Log in to Bugzilla");
+$sel->title_isnt("Logowanie do Bugzilli");
