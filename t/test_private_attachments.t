@@ -5,17 +5,18 @@ use lib qw(lib);
 use Test::More "no_plan";
 
 use QA::Util;
+use utf8;
 
-# We have to upload files from the local computer. This requires
-# chrome privileges.
+# Do tego testu wymagane będzie dodawanie plików znajdujących się na dysku komputera.
+# Do tego potrzebne są przywileje chrome.
 my ($sel, $config) = get_selenium(CHROME_MODE);
 
 # set the insidergroup parameter to the admin group, and make sure
 # we can view and delete attachments.
 
 log_in($sel, $config, 'admin');
-set_parameters($sel, { "Group Security" => {"insidergroup" => {type => "select", value => "admin"}},
-                       "Attachments"    => {"allow_attachment_display-on" => undef,
+set_parameters($sel, { "Grupy zabezpieczeń" => {"insidergroup" => {type => "select", value => "admin"}},
+                       "Załączniki"    => {"allow_attachment_display-on" => undef,
                                             "allow_attachment_deletion-on" => undef}
                      });
 
@@ -26,8 +27,8 @@ my $bug_summary = "Some comments are private";
 $sel->type_ok("short_desc", $bug_summary);
 $sel->type_ok("comment", "and some attachments too, like this one.");
 $sel->check_ok("comment_is_private");
-$sel->click_ok('//input[@value="Add an attachment"]');
-$sel->type_ok("data", "/var/www/html/selenium/bugzilla/patch.diff");
+$sel->click_ok('//input[@value="Dodaj załącznik"]');
+$sel->type_ok("data", "/var/www/selenium/latka.diff");
 $sel->type_ok("description", "private attachment, v1");
 $sel->check_ok("ispatch");
 my $bug1_id = create_bug($sel, $bug_summary);
@@ -37,10 +38,11 @@ $sel->is_checked_ok('//a[@id="comment_link_0"]/../..//div//input[@type="checkbox
 
 # Now attach a public patch to the existing bug.
 
-$sel->click_ok("link=Add an attachment");
+$sel->click_ok("link=Dodaj załącznik");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Create New Attachment for Bug #$bug1_id");
-$sel->type_ok("data", "/var/www/html/selenium/bugzilla/patch.diff");
+# Zmodyfikowano
+$sel->title_like(qr/^Tworzenie/);
+$sel->type_ok("data", "/var/www/selenium/latka.diff");
 $sel->type_ok("description", "public attachment, v2");
 $sel->check_ok("ispatch");
 # The existing attachment name must be displayed, to mark it as obsolete.
@@ -75,8 +77,8 @@ foreach my $user ('', 'unprivileged') {
 
 $sel->click_ok('//a[@href="attachment.cgi?id=' . $attachment1_id . '&action=edit"]');
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Attachment $attachment1_id Details for Bug $bug1_id");
-$sel->is_text_present_ok("created by admin");
+$sel->title_is("Szczegóły załącznika $attachment1_id do błędu $bug1_id");
+$sel->is_text_present_ok("utworzony przez admin");
 $sel->type_ok("comment", "This attachment is not mine.");
 edit_bug($sel, $bug1_id, $bug_summary, {id => "update"});
 $sel->is_text_present_ok("This attachment is not mine");
@@ -84,13 +86,14 @@ $sel->is_text_present_ok("This attachment is not mine");
 # Powerless users will always be able to view their own attachments, even
 # when those are marked private by a member of the insider group.
 
-$sel->click_ok("link=Add an attachment");
+$sel->click_ok("link=Dodaj załącznik");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Create New Attachment for Bug #$bug1_id");
-$sel->type_ok("data", "/var/www/html/selenium/bugzilla/patch.diff");
+# Zmodyfikowano
+$sel->title_like(qr/^Tworzenie/);
+$sel->type_ok("data", "/var/www/selenium/latka.diff");
 $sel->check_ok("ispatch");
 # The user doesn't have editbugs privs.
-$sel->is_text_present_ok("[no attachments can be made obsolete]");
+$sel->is_text_present_ok("[brak załączników do zdezaktualizowania]");
 $sel->type_ok("description", "My patch, which I should see, always");
 $sel->type_ok("comment", "This is my patch!");
 edit_bug($sel, $bug1_id, $bug_summary, {id => "create"});
@@ -107,7 +110,7 @@ log_in($sel, $config, 'admin');
 go_to_bug($sel, $bug1_id);
 $sel->click_ok('//a[@href="attachment.cgi?id=' . $attachment2_id . '&action=edit"]');
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Attachment $attachment2_id Details for Bug $bug1_id");
+$sel->title_is("Szczegóły załącznika $attachment2_id do błędu $bug1_id");
 $sel->check_ok("isprivate");
 $sel->type_ok("comment", "Making the powerless user's patch private.");
 edit_bug($sel, $bug1_id, $bug_summary, {id => "update"});
@@ -143,21 +146,22 @@ log_in($sel, $config, 'admin');
 go_to_bug($sel, $bug1_id);
 $sel->click_ok('//a[@href="attachment.cgi?id=' . $attachment2_id . '&action=edit"]');
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Attachment $attachment2_id Details for Bug $bug1_id");
-$sel->click_ok("link=Delete");
+$sel->title_is("Szczegóły załącznika $attachment2_id do błędu $bug1_id");
+$sel->click_ok("link=Usuń");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Delete Attachment $attachment2_id of Bug $bug1_id");
-$sel->is_text_present_ok("Do you really want to delete this attachment?");
+$sel->title_is("Usuwanie załącznika $attachment2_id z błędu $bug1_id");
+$sel->is_text_present_ok("Czy na pewno chcesz usunąć ten załącznik?");
 $sel->type_ok("reason", "deleted by Selenium");
 edit_bug_and_return($sel, $bug1_id, $bug_summary, {id => "delete"});
 $sel->is_text_present_ok("deleted by Selenium");
-$sel->click_ok("link=attachment $attachment2_id");
+# Zmodyfikowano
+$sel->click_ok('//a[@href="attachment.cgi?id=' . $attachment2_id . '&action=edit"]');
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Attachment Removed");
-$sel->is_text_present_ok("The attachment you are attempting to access has been removed");
+$sel->title_is("Szczegóły załącznika $attachment2_id do błędu $bug1_id");
+$sel->is_text_present_ok("usunięty");
 
 set_parameters($sel, { 
-    "Group Security" => {"insidergroup" => { type => "select", 
+    "Grupy zabezpieczeń" => {"insidergroup" => { type => "select", 
                                              value => "QA-Selenium-TEST" }},
 });
 logout($sel);
