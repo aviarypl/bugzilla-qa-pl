@@ -5,13 +5,14 @@ use lib qw(lib);
 use Test::More "no_plan";
 
 use QA::Util;
+use utf8;
 
 my ($sel, $config) = get_selenium();
 my $qa_user = $config->{QA_Selenium_TEST_user_login};
 my $no_privs_user = $config->{unprivileged_user_login};
 
 log_in($sel, $config, 'admin');
-set_parameters($sel, { "Group Security" => {"strict_isolation-on" => undef} });
+set_parameters($sel, { "Grupy zabezpieczeń" => {"strict_isolation-on" => undef} });
 
 # Restrict the bug to the "Master" group, so that we can check that only
 # allowed people can be CC'ed to the bug.
@@ -43,13 +44,13 @@ edit_bug($sel, $bug1_id, $bug_summary);
 # for the product.
 
 edit_product($sel, "Another Product");
-$sel->click_ok("link=Edit Group Access Controls:");
+$sel->click_ok("link=Modyfikuj relacje grupa/produkt:");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Edit Group Controls for Another Product");
+$sel->title_is("Modyfikowanie relacji grupa/produkt dla produktu „Another Product”");
 $sel->check_ok("canedit_$master_gid");
 $sel->click_ok("submit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Update group access controls for Another Product");
+$sel->title_is("Aktualizacja grupy dla produktu „Another Product”");
 
 # Non-members can no longer be CC'ed to the bug.
 
@@ -58,33 +59,33 @@ $sel->click_ok("cc_edit_area_showhide");
 $sel->type_ok("newcc", $no_privs_user);
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Invalid User Group");
-$sel->is_text_present_ok("User '$no_privs_user' is not able to edit the 'Another Product' Product");
+$sel->title_is("Nieprawidłowa grupa użytkowników");
+$sel->is_text_present_ok("Użytkownik „$no_privs_user” nie może modyfikować produktu „Another Product”");
 $sel->go_back_ok();
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_like(qr/^Bug $bug1_id /);
+$sel->title_like(qr/^Błąd $bug1_id /);
 $sel->click_ok("cc_edit_area_showhide");
 $sel->type_ok("newcc", $qa_user);
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Invalid User Group");
-$sel->is_text_present_ok("User '$qa_user' is not able to edit the 'Another Product' Product");
+$sel->title_is("Nieprawidłowa grupa użytkowników");
+$sel->is_text_present_ok("Użytkownik „$qa_user” nie może modyfikować produktu „Another Product”");
 
 # Now set QA_Selenium_TEST user as a member of the Master group.
 
 go_to_admin($sel);
-$sel->click_ok("link=Users");
+$sel->click_ok("link=Użytkownicy");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Search users");
+$sel->title_is("Wyszukiwanie użytkowników");
 $sel->type_ok("matchstr", $qa_user);
-$sel->select_ok("matchtype", "label=exact (find this user)");
+$sel->select_ok("matchtype", "label=dokładnie tego użytkownika");
 $sel->click_ok("search");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Edit user QA-Selenium-TEST <$qa_user>");
+$sel->title_is("Edytowanie użytkownika QA-Selenium-TEST <$qa_user>");
 $sel->check_ok("group_$master_gid");
 $sel->click_ok("update");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("User $qa_user updated");
+$sel->title_is("Zaktualizowano konto $qa_user");
 
 # The QA_Selenium_TEST user can now be CC'ed to the bug.
 
@@ -103,33 +104,33 @@ $sel->click_ok("cc_edit_area_showhide");
 $sel->type_ok("newcc", "$qa_user, $no_privs_user");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Invalid User Group");
-$sel->is_text_present_ok("User '$no_privs_user' is not able to edit the 'Another Product' Product");
+$sel->title_is("Nieprawidłowa grupa użytkowników");
+$sel->is_text_present_ok("Użytkownik „$no_privs_user” nie może modyfikować produktu „Another Product”");
 
 # Reset parameters back to defaults.
 
-set_parameters($sel, { "Group Security" => {"strict_isolation-off" => undef} });
+set_parameters($sel, { "Grupy zabezpieczeń" => {"strict_isolation-off" => undef} });
 
 go_to_admin($sel);
-$sel->click_ok("link=Users");
+$sel->click_ok("link=Użytkownicy");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Search users");
+$sel->title_is("Wyszukiwanie użytkowników");
 $sel->type_ok("matchstr", $qa_user);
-$sel->select_ok("matchtype", "label=exact (find this user)");
+$sel->select_ok("matchtype", "label=dokładnie tego użytkownika");
 $sel->click_ok("search");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Edit user QA-Selenium-TEST <$qa_user>");
+$sel->title_is("Edytowanie użytkownika QA-Selenium-TEST <$qa_user>");
 $sel->uncheck_ok("group_$master_gid");
 $sel->click_ok("update");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("User $qa_user updated");
+$sel->title_is("Zaktualizowano konto $qa_user");
 
 edit_product($sel, "Another Product");
-$sel->click_ok("link=Edit Group Access Controls:");
+$sel->click_ok("link=Modyfikuj relacje grupa/produkt:");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Edit Group Controls for Another Product");
+$sel->title_is("Modyfikowanie relacji grupa/produkt dla produktu „Another Product”");
 $sel->uncheck_ok("canedit_$master_gid");
 $sel->click_ok("submit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Update group access controls for Another Product");
+$sel->title_is("Aktualizacja grupy dla produktu „Another Product”");
 logout($sel);
