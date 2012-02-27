@@ -327,8 +327,8 @@ $sel->is_text_present_ok("Status POTWIERDZONY ROZWIĄZANY");
 # Last step: move bugs to another DB, if the extension is enabled.
 
 if ($config->{test_extensions}) {
-    set_parameters($sel, { "Bug Moving" => {"move-to-url"     => {type => "text", value => 'http://www.foo.com/'},
-                                            "move-to-address" => {type => "text", value => 'import@foo.com'},
+    set_parameters($sel, { "Przenoszenie błędów" => {"move-to-url"     => {type => "text", value => 'http://www.test.com/'},
+                                            "move-to-address" => {type => "text", value => 'import@sialala.com'},
                                             "movers"          => {type => "text", value => $config->{admin_user_login}}
                                            }
                          });
@@ -356,11 +356,12 @@ if ($config->{test_extensions}) {
 
     go_to_bug($sel, $bug2_id);
     edit_bug_and_return($sel, $bug2_id, $bug_summary2, {id => "oldbugmove"});
-    $sel->selected_label_is("resolution", "MOVED");
-    $sel->is_text_present_ok("Bug moved to http://www.foo.com/.");
+    $sel->selected_label_is("resolution", "PRZENIESIONY");
+    $sel->is_text_present_ok("Błąd został przeniesiony do http://www.test.com/.");
 
-    # Disable bug moving again.
-    set_parameters($sel, { "Bug Moving" => {"movers" => {type => "text", value => ""}} });
+
+    # Ponowne wyłączenie przenoszenia błędów.
+    set_parameters($sel, { "Przenoszenie błędów" => {"movers" => {type => "text", value => ""}} });
 }
 
 # Make sure token checks are working correctly for single bug editing and mass change,
@@ -370,7 +371,7 @@ foreach my $params (["no_token_single_bug", ""], ["invalid_token_single_bug", "&
     my ($comment, $token) = @$params;
     $sel->open_ok("/$config->{bugzilla_installation}/process_bug.cgi?id=$bug1_id&comment=$comment$token",
                   undef, "Edytowanie błędu z " . ($token ? "nieprawidłowym" : "usuniętym") . " tokenem");
-    $sel->title_is("Podejrzane działania");
+    $sel->title_is("Podejrzana czynność");
     $sel->is_text_present_ok($token ? "z nieprawidłowym tokenem" : "bezpośrednio do paska adresu przeglądarki");
     edit_bug_and_return($sel, $bug1_id, $bug_summary, {id => "confirm"});
     $sel->is_text_present_ok($comment);
