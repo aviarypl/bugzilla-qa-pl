@@ -1,46 +1,48 @@
 use strict;
 use warnings;
 use lib qw(lib);
+use utf8;
 
 use Test::More "no_plan";
 
 use QA::Util;
 
-################################################################
-# 2nd script about flags. This one is focused on flag behavior #
-# when moving a bug from one product/component to another one. #
-################################################################
+#####################################################
+# Drugi test dotyczący flag. Ten koncentruje się na #
+# sprawdzeniu zachowania przy przenoszeniu błedu z  #
+# jednego produktu/komponentudo drugiego            #
+#####################################################
 
-# We have to upload files from the local computer. This requires
-# chrome privileges.
+# Do tego testu wymagane będzie dodawanie plików znajdujących się na dysku komputera.
+# Do tego potrzebne są przywileje chrome.
 my ($sel, $config) = get_selenium(CHROME_MODE);
 
 # Start by creating a flag type for bugs.
 
 log_in($sel, $config, 'admin');
 go_to_admin($sel);
-$sel->click_ok("link=Flags");
+$sel->click_ok("link=Flagi");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Administer Flag Types");
-$sel->click_ok("link=Create Flag Type for Bugs");
+$sel->title_is("Zarządzanie flagami");
+$sel->click_ok("link=Utwórz flagę dla błędów");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Create Flag Type for Bugs");
+$sel->title_is("Tworzenie flagi dla błędów");
 $sel->type_ok("name", "selenium");
-$sel->type_ok("description", "Available in TestProduct and Another Product/c1");
+$sel->type_ok("description", "Flaga dla produktu TestProduct i Another Product/c1");
 $sel->add_selection_ok("inclusion_to_remove", "label=__Any__:__Any__");
 $sel->click_ok("categoryAction-removeInclusion");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Create Flag Type for Bugs");
+$sel->title_is("Tworzenie flagi dla błędów");
 $sel->select_ok("product", "label=TestProduct");
 $sel->selected_label_is("component", "__Any__");
 $sel->click_ok("categoryAction-include");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Create Flag Type for Bugs");
+$sel->title_is("Tworzenie flagi dla błędów");
 $sel->select_ok("product", "label=Another Product");
 $sel->select_ok("component", "label=c1");
 $sel->click_ok("categoryAction-include");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Create Flag Type for Bugs");
+$sel->title_is("Tworzenie flagi dla błędów");
 
 # This flag type must have a higher sortkey than the one we will create later.
 # The reason is that link=selenium will catch the first link with this name in
@@ -56,10 +58,10 @@ $sel->select_ok("grant_group", "label=editbugs");
 $sel->select_ok("request_group", "label=canconfirm");
 $sel->click_ok("save");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Flag Type 'selenium' Created");
-$sel->is_text_present_ok("The flag type selenium has been created.");
+$sel->title_is("Flaga „selenium” została utworzona");
+$sel->is_text_present_ok("Flaga selenium została utworzona.");
 
-# Store the flag type ID.
+# Zapamiętanie ID flagi.
 
 $sel->click_ok("link=selenium");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
@@ -71,32 +73,32 @@ my $flagtype1_id = $1;
 
 $sel->go_back_ok();
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->click_ok("link=Create Flag Type For Attachments");
+$sel->click_ok("link=Utwórz flagę dla załączników");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Create Flag Type for Attachments");
+$sel->title_is("Tworzenie flagi dla załączników");
 $sel->type_ok("name", "selenium_review");
-$sel->type_ok("description", "Review flag used by Selenium");
+$sel->type_ok("description", "Flaga review na potrzeby Selenium");
 $sel->add_selection_ok("inclusion_to_remove", "label=__Any__:__Any__");
 $sel->click_ok("categoryAction-removeInclusion");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Create Flag Type for Attachments");
+$sel->title_is("Tworzenie flagi dla załączników");
 $sel->select_ok("product", "label=Another Product");
 $sel->click_ok("categoryAction-include");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Create Flag Type for Attachments");
+$sel->title_is("Tworzenie flagi dla załączników");
 $sel->type_ok("sortkey", 100);
 $sel->value_is("is_active", "on");
 $sel->value_is("is_requestable", "on");
 $sel->click_ok("is_multiplicable");
 $sel->value_is("is_multiplicable", "off");
-$sel->selected_label_is("grant_group", "(no group)");
-$sel->selected_label_is("request_group", "(no group)");
+$sel->selected_label_is("grant_group", "(brak grupy)");
+$sel->selected_label_is("request_group", "(brak grupy)");
 $sel->click_ok("save");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Flag Type 'selenium_review' Created");
-$sel->is_text_present_ok("The flag type selenium_review has been created.");
+$sel->title_is("Flaga „selenium_review” została utworzona");
+$sel->is_text_present_ok("Flaga selenium_review została utworzona");
 
-# Store the flag type ID.
+# Zapamiętanie ID flagi.
 
 $sel->click_ok("link=selenium_review");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
@@ -109,14 +111,14 @@ my $aflagtype1_id = $1;
 
 $sel->go_back_ok();
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->click_ok("link=Create Flag Type For Attachments");
+$sel->click_ok("link=Utwórz flagę dla załączników");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->type_ok("name", "selenium_review");
-$sel->type_ok("description", "Another review flag used by Selenium");
+$sel->type_ok("description", "Kolejna flaga review na potrzeby Selenium");
 $sel->select_ok("product", "label=Another Product");
 $sel->click_ok("categoryAction-include");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Create Flag Type for Attachments");
+$sel->title_is("Tworzenie flagi dla załączników");
 $sel->type_ok("sortkey", 50);
 $sel->value_is("is_active", "on");
 $sel->value_is("is_requestable", "on");
@@ -125,9 +127,9 @@ $sel->select_ok("grant_group", "label=editbugs");
 $sel->select_ok("request_group", "label=canconfirm");
 $sel->click_ok("save");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Flag Type 'selenium_review' Created");
+$sel->title_is("Flaga „selenium_review” została utworzona");
 
-# Store the flag type ID.
+# Zapamiętanie ID flagi.
 
 $sel->click_ok("link=selenium_review");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
@@ -142,17 +144,17 @@ $sel->select_ok("flag_type-$flagtype1_id", "label=+");
 my $bug_summary = "The selenium flag should be kept on product change";
 $sel->type_ok("short_desc", $bug_summary);
 $sel->type_ok("comment", "pom");
-$sel->click_ok('//input[@value="Add an attachment"]');
-$sel->type_ok("data", "/var/www/html/selenium/bugzilla/patch.diff");
-$sel->type_ok("description", "small patch");
+$sel->click_ok('//input[@value="Dodaj załącznik"]');
+$sel->type_ok("data", "/var/www/selenium/latka.diff");
+$sel->type_ok("description", "mała łatka");
 $sel->click_ok("ispatch");
 $sel->value_is("ispatch", "on");
-ok(!$sel->is_element_present("flag_type-$aflagtype1_id"), "Flag type $aflagtype1_id not available in TestProduct");
+ok(!$sel->is_element_present("flag_type-$aflagtype1_id"), "Flaga $aflagtype1_id niedostępna w produkcie TestProduct");
 $sel->select_ok("flag_type-$aflagtype2_id", "label=-");
 my $bug1_id = create_bug($sel, $bug_summary);
 
 $sel->is_text_present_ok("$config->{admin_user_username}: selenium");
-my $flag1_id = $sel->get_attribute('//select[@title="Available in TestProduct and Another Product/c1"]@id');
+my $flag1_id = $sel->get_attribute('//select[@title="Flaga dla produktu TestProduct i Another Product/c1"]@id');
 $flag1_id =~ s/flag-//;
 $sel->selected_label_is("flag-$flag1_id", "+");
 $sel->is_text_present_ok("$config->{admin_user_username}: selenium_review-");
@@ -161,10 +163,10 @@ $sel->is_text_present_ok("$config->{admin_user_username}: selenium_review-");
 # Both the bug and attachment flags should survive.
 
 $sel->select_ok("product", "label=Another Product");
-$sel->type_ok("comment", "Moving to Another Product / c1. The flag should be preserved.");
+$sel->type_ok("comment", "Przenoszę do Another Product / c1. Flaga powinna zostać zachowana.");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Verify New Product Details...");
+$sel->title_is("Weryfikacja danych o nowym produkcie…");
 $sel->select_ok("component", "label=c1");
 edit_bug_and_return($sel, $bug1_id, $bug_summary, {id => "change_product"});
 $sel->selected_label_is("flag-$flag1_id", "+");
@@ -173,11 +175,11 @@ $sel->is_text_present_ok("$config->{admin_user_username}: selenium_review-");
 # Now moving the bug into the c2 component. The bug flag
 # won't survive, but the attachment flag should.
 
-$sel->type_ok("comment", "Moving to c2. The selenium flag will be deleted.");
+$sel->type_ok("comment", "Przenoszę do c2. Flaga selenium zostanie usunięta.");
 $sel->select_ok("component", "label=c2");
 edit_bug_and_return($sel, $bug1_id, $bug_summary);
-ok(!$sel->is_element_present("flag-$flag1_id"), "The selenium bug flag didn't survive");
-ok(!$sel->is_element_present("flag_type-$flagtype1_id"), "The selenium flag type doesn't exist");
+ok(!$sel->is_element_present("flag-$flag1_id"), "Flaga selenium dla błędów nie przetrwałae");
+ok(!$sel->is_element_present("flag_type-$flagtype1_id"), "Flaga selenium nie istnieje");
 $sel->is_text_present_ok("$config->{admin_user_username}: selenium_review-");
 
 # File a bug in 'Another Product / c2' and assign it
@@ -186,17 +188,17 @@ $sel->is_text_present_ok("$config->{admin_user_username}: selenium_review-");
 file_bug_in_product($sel, 'Another Product');
 $sel->select_ok("component", "label=c2");
 $sel->type_ok("assigned_to", $config->{unprivileged_user_login});
-ok(!$sel->is_editable("flag_type-$flagtype1_id"), "The selenium bug flag type is displayed but not selectable");
+ok(!$sel->is_editable("flag_type-$flagtype1_id"), "Flaga selenium dla błędów jest widoczna, ale nie można jej wybrać");
 $sel->select_ok("component", "label=c1");
-$sel->is_editable_ok("flag_type-$flagtype1_id", "The selenium bug flag type is not selectable");
+$sel->is_editable_ok("flag_type-$flagtype1_id", "Flaga selenium dla błędów niemożliwa do wybrania");
 $sel->select_ok("flag_type-$flagtype1_id", "label=?");
-my $bug_summary2 = "Create a new selenium flag for c2";
+my $bug_summary2 = "Nowa flaga selenium dla c2";
 $sel->type_ok("short_desc", $bug_summary2);
 $sel->type_ok("comment", ".");
 my $bug2_id = create_bug($sel, $bug_summary2);
 
 $sel->is_text_present_ok("$config->{admin_user_username}: selenium");
-my $flag2_id = $sel->get_attribute('//select[@title="Available in TestProduct and Another Product/c1"]@id');
+my $flag2_id = $sel->get_attribute('//select[@title="Flaga dla produktu TestProduct i Another Product/c1"]@id');
 $flag2_id =~ s/flag-//;
 $sel->selected_label_is("flag-$flag2_id", '?');
 
@@ -204,32 +206,32 @@ $sel->selected_label_is("flag-$flag2_id", '?');
 # for the 'Another Product / c2' component only.
 
 go_to_admin($sel);
-$sel->click_ok("link=Flags");
+$sel->click_ok("link=Flagi");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Administer Flag Types");
-$sel->click_ok("link=Create Flag Type for Bugs");
+$sel->title_is("Zarządzanie flagami");
+$sel->click_ok("link=Utwórz flagę dla błędów");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Create Flag Type for Bugs");
+$sel->title_is("Tworzenie flagi dla błędów");
 $sel->type_ok("name", "selenium");
-$sel->type_ok("description", "Another flag with the selenium name");
+$sel->type_ok("description", "Kolejna flaga o nazwie selenium");
 $sel->add_selection_ok("inclusion_to_remove", "label=__Any__:__Any__");
 $sel->click_ok("categoryAction-removeInclusion");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Create Flag Type for Bugs");
+$sel->title_is("Tworzenie flagi dla błędów");
 $sel->select_ok("product", "label=Another Product");
 $sel->select_ok("component", "label=c2");
 $sel->click_ok("categoryAction-include");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Create Flag Type for Bugs");
+$sel->title_is("Tworzenie flagi dla błędów");
 $sel->type_ok("sortkey", 50);
 $sel->value_is("is_active", "on");
 $sel->value_is("is_requestable", "on");
 $sel->value_is("is_multiplicable", "on");
-$sel->selected_label_is("grant_group", "(no group)");
-$sel->selected_label_is("request_group", "(no group)");
+$sel->selected_label_is("grant_group", "(brak grupy)");
+$sel->selected_label_is("request_group", "(brak grupy)");
 $sel->click_ok("save");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Flag Type 'selenium' Created");
+$sel->title_is("Flaga „selenium” została utworzona");
 
 # Store the flag type ID.
 
@@ -244,10 +246,10 @@ my $flagtype2_id = $1;
 go_to_bug($sel, $bug2_id);
 $sel->select_ok("component", "label=c2");
 $sel->click_ok("set_default_assignee");
-$sel->type_ok("comment", "The selenium flag should be preserved.");
+$sel->type_ok("comment", "Flaga selenium powinna przetrwać.");
 edit_bug_and_return($sel, $bug2_id, $bug_summary2);
 $sel->selected_label_is("flag-$flag2_id", '?');
-ok(!$sel->is_element_present("flag_type-$flagtype1_id"), "Flag type not available in c2");
+ok(!$sel->is_element_present("flag_type-$flagtype1_id"), "Typ flagi niedostępny w c2");
 $sel->is_element_present_ok("flag_type-$flagtype2_id");
 logout($sel);
 
@@ -263,23 +265,23 @@ $sel->selected_label_is("flag-$flag2_id", "+");
 # as the flag setter is not in the editbugs group.
 
 $sel->select_ok("product", "label=TestProduct");
-$sel->type_ok("comment", "selenium flag will be lost. I don't have editbugs privs.");
+$sel->type_ok("comment", "Flaga selenium nie przetrwa. Nie mam przywilejów do editbugs.");
 $sel->click_ok("commit");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Verify New Product Details...");
+$sel->title_is("Weryfikacja danych o nowym produkcie…");
 edit_bug_and_return($sel, $bug2_id, $bug_summary2, {id => "change_product"});
 ok(!$sel->is_element_present("flag-$flag2_id"), "Flag $flag2_id deleted");
-ok(!$sel->is_editable("flag_type-$flagtype1_id"), "Flag type 'selenium' not editable by powerless users");
-ok(!$sel->is_element_present("flag_type-$flagtype2_id"), "Flag type not available in c1");
+ok(!$sel->is_editable("flag_type-$flagtype1_id"), "Flaga 'selenium' nie może być edytowana przez użytkowników bez uprawnień");
+ok(!$sel->is_element_present("flag_type-$flagtype2_id"), "Typ flagi niedostępny w c1");
 logout($sel);
 
 # Time to delete created flag types.
 
 log_in($sel, $config, 'admin');
 go_to_admin($sel);
-$sel->click_ok("link=Flags");
+$sel->click_ok("link=Flagi");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Administer Flag Types");
+$sel->title_is("Zarządzanie flagami");
 
 foreach my $flagtype ([$flagtype1_id, "selenium"], [$flagtype2_id, "selenium"],
                       [$aflagtype1_id, "selenium_review"], [$aflagtype2_id, "selenium_review"])
@@ -288,11 +290,11 @@ foreach my $flagtype ([$flagtype1_id, "selenium"], [$flagtype2_id, "selenium"],
     my $flag_name = $flagtype->[1];
     $sel->click_ok("//a[\@href='editflagtypes.cgi?action=confirmdelete&id=$flag_id']");
     $sel->wait_for_page_to_load_ok(WAIT_TIME);
-    $sel->title_is("Confirm Deletion of Flag Type '$flag_name'");
-    $sel->click_ok("link=Yes, delete");
+    $sel->title_is("Potwierdzenie usunięcia flagi „$flag_name”");
+    $sel->click_ok("link=Tak");
     $sel->wait_for_page_to_load_ok(WAIT_TIME);
-    $sel->title_is("Flag Type '$flag_name' Deleted");
+    $sel->title_is("Usunięto flagę „$flag_name”");
     my $msg = trim($sel->get_text("message"));
-    ok($msg eq "The flag type $flag_name has been deleted.", "Flag type $flag_name deleted");
+    ok($msg eq "Flaga $flag_name została usunięta.", "Flaga $flag_name została usunięta");
 }
 logout($sel);
