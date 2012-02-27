@@ -2,6 +2,7 @@ use strict;
 use warnings;
 use lib qw(lib);
 use QA::Util;
+use utf8;
 use Test::More "no_plan";
 
 my ($sel, $config) = get_selenium();
@@ -14,16 +15,16 @@ my ($sel, $config) = get_selenium();
 go_to_home($sel, $config);
 open_advanced_search_page($sel);
 $sel->type_ok("short_desc", "ois£jdfm#sd%fasd!fm", "Type a non-existent string in the bug summary field");
-$sel->click_ok("Search");
+$sel->click_ok("Szukaj");
 $sel->wait_for_page_to_load(WAIT_TIME);
-$sel->title_is("Bug List");
-$sel->is_text_present_ok("Zarro Boogs found");
+$sel->title_is("Lista błędów");
+$sel->is_text_present_ok("Nie znaleziono żadnych błędów.");
 
 # Display all available columns. Look for all bugs assigned to a user who doesn't exist.
 
 $sel->open_ok("/$config->{bugzilla_installation}/buglist.cgi?quicksearch=%40xx45ft&columnlist=all");
-$sel->title_is("Bug List");
-$sel->is_text_present_ok("Zarro Boogs found");
+$sel->title_is("Lista błędów");
+$sel->is_text_present_ok("Nie znaleziono żadnych błędów.");
 
 # Now some real tests.
 
@@ -45,16 +46,16 @@ open_advanced_search_page($sel);
 $sel->remove_all_selections("bug_status");
 $sel->remove_all_selections("resolution");
 $sel->type_ok("short_desc", "my ID is $bug1_id");
-$sel->select_ok("f1", "label=Commenter");
-$sel->select_ok("o1", "label=is equal to");
+$sel->select_ok("f1", "label=Komentujący");
+$sel->select_ok("o1", "label=jest taki, jak");
 $sel->type_ok("v1", "%user%");
 $sel->click_ok("add_button");
-$sel->select_ok("f2", "label=Comment");
-$sel->select_ok("o2", "label=contains the string");
+$sel->select_ok("f2", "label=Komentarz");
+$sel->select_ok("o2", "label=zawiera wyrażenie");
 $sel->type_ok("v2", "coming buglist");
-$sel->click_ok("Search");
+$sel->click_ok("Szukaj");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Bug List");
-$sel->is_text_present_ok("One bug found");
+$sel->title_is("Lista błędów");
+$sel->is_text_present_ok("Znaleziono jeden błąd.");
 $sel->is_text_present_ok("Update this summary with this bug ID: my ID is $bug1_id");
 logout($sel);
