@@ -142,7 +142,6 @@ sub get_rpc_clients {
 sub go_to_home {
     my ($sel, $config) = @_;
     $sel->open_ok("/$config->{bugzilla_installation}/", undef, "Przejdź do strony głównej");
-    # $sel->is_text_present("Strona główna");
     $sel->title_is("Bugzilla – Strona główna");
 }
 
@@ -155,7 +154,6 @@ sub log_in {
     $sel->type_ok("Bugzilla_password_top", $config->{"${user}_user_passwd"}, "Wprowadź hasło użytkownika $user");
     $sel->click_ok("log_in_top", undef, "Zaloguj się");
     $sel->wait_for_page_to_load(WAIT_TIME);
-    #$sel->is_text_present("Strona główna", "Użytkownik jest zalogowany");
     $sel->title_is("Bugzilla – Strona główna", "Użytkownik jest zalogowany");
 }
 
@@ -222,7 +220,7 @@ sub edit_bug_and_return {
     my $ndash = NDASH;
 
     edit_bug($sel, $bug_id, $bug_summary, $options);
-    $sel->click_ok("link=błędu $bug_id"); #zwrpc uwage na forme wyrazu "bledu" - tak widnieje w polskim UI
+    $sel->click_ok("link=błędu $bug_id"); #zwróc uwage na forme wyrazu "bledu" - tak widnieje w polskim UI
     $sel->wait_for_page_to_load_ok(WAIT_TIME);
     $sel->title_is("Błąd $bug_id $ndash $bug_summary", "Wracam do błędu $bug_id");
 }
@@ -297,13 +295,12 @@ sub open_advanced_search_page {
 
     $sel->click_ok("link=Wyszukiwanie");
     $sel->wait_for_page_to_load(WAIT_TIME);
-    my $title = $sel->get_title();
-    if ($title eq "Wyszukiwanie błędów") {
-        ok(1, "Display the simple search form");
+    if ($sel->is_text_present("Znajdź konkretny błąd")) {
+        ok(1, "Wyświetla stronę szukania prostego");
         $sel->click_ok("link=Wyszukiwanie zaawansowane");
         $sel->wait_for_page_to_load(WAIT_TIME);
     }
-    $sel->title_is("Wyszukiwanie błędów", "Display the Advanced search form");
+    $sel->is_text_present_ok("Szukanie niestandardowe", "Wyświetla stronę szukania zaawansowanego");
 }
 
 # $params is a hashref of the form:
