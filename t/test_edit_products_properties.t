@@ -195,8 +195,10 @@ if ($config->{test_extensions}) {
     $sel->is_text_present_ok("Zaktualizowano liczbę głosów wymaganą do potwierdzenia błędu");
     $text = trim($sel->get_text("bugzilla-body"));
     # Używamy .{1} zamiast symbolu strzałki w prawo, w przeciwnym wypadku test pada.
-    ok($text =~ /Wyszukiwanie niepotwierdzonych błędów w tym produkcie w poszukiwaniu tych, które po zmianach ustawień głosowania mają wystarczającą liczbę głosów do potwierdzenia\.{3} .{1}nie znaleziono/,
-       "Nie znaleziono żadnych błędów potwierdzonych głosowaniem (ustawienie votestoconfirm = 0 wyłącza opcję automatycznego potwierdzania błędów)");
+#    ok($text =~ /Wyszukiwanie niepotwierdzonych błędów w tym produkcie w poszukiwaniu tych, które po zmianach ustawień głosowania mają wystarczającą liczbę głosów do potwierdzenia\.{3} .{1}nie znaleziono/,
+#       "Nie znaleziono żadnych błędów potwierdzonych głosowaniem (ustawienie votestoconfirm = 0 wyłącza opcję automatycznego potwierdzania błędów)");
+    #Podmieniłam na tekst ze strzałką, bo mi skubany tutaj padał. Teraz jakoś działa, ale zostawiam poprzednią wersję na wszelki wypadek
+    ok($text =~ /Wyszukiwanie niepotwierdzonych błędów w tym produkcie w poszukiwaniu tych, które po zmianach ustawień głosowania mają wystarczającą liczbę głosów do potwierdzenia…\. →nie znaleziono/. "Nie znaleziono żadnych błędów potwierdzonych głosowaniem (ustawienie votestoconfirm = 0 wyłącza opcję automatycznego potwierdzania błędów)");
 
     # Zmiana ilości głosów potrzebnych do automatycznego potwierdzenia błędów na 2
     # Głosowanie na błąd i kolejna zmiana ilości głosów na 1
