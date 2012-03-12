@@ -68,7 +68,7 @@ my $flagtype1_id = $1;
 $sel->click_ok("//a[\@href='editflagtypes.cgi?action=copy&id=$flagtype1_id']");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 # Do poprawki po naprawieniu krowy 4251
-$sel->title_is("Tworzenie flagi dla błędów Na podstawie flagi „FlagaTestowa1”");
+$sel->title_is("Tworzenie flagi dla błędów na podstawie flagi „FlagaTestowa1”");
 $sel->type_ok("name", "FlagaTestowa2");
 $sel->type_ok("description", "flagatestowa2");
 @inclusion = $sel->get_select_options("inclusion_to_remove");
@@ -98,7 +98,7 @@ my $flagtype2_id = $1;
 
 $sel->click_ok("//a[\@href='editflagtypes.cgi?action=copy&id=$flagtype1_id']");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Tworzenie flagi dla błędów Na podstawie flagi „FlagaTestowa1”");
+$sel->title_is("Tworzenie flagi dla błędów na podstawie flagi „FlagaTestowa1”");
 $sel->type_ok("name", "FlagaTestowa3");
 $sel->type_ok("description", "flagatestowa3");
 $sel->type_ok("sortkey", "980");
@@ -153,7 +153,7 @@ my $aflagtype1_id = $1;
 $sel->click_ok("//a[\@href='editflagtypes.cgi?action=copy&id=$aflagtype1_id']");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 # Do poprawki po naprawieniu krowy 4251
-$sel->title_is("Tworzenie flagi dla załączników Na podstawie flagi „FlagaDlaZalacznikow1”");
+$sel->title_is("Tworzenie flagi dla załączników na podstawie flagi „FlagaDlaZalacznikow1”");
 $sel->type_ok("name", "FlagaDlaZalacznikow2");
 $sel->type_ok("description", "flagadlazalacznikow2");
 @inclusion = $sel->get_select_options("inclusion_to_remove");
@@ -176,7 +176,7 @@ my $aflagtype2_id = $1;
 
 $sel->click_ok("//a[\@href='editflagtypes.cgi?action=copy&id=$aflagtype1_id']");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Tworzenie flagi dla załączników Na podstawie flagi „FlagaDlaZalacznikow1”");
+$sel->title_is("Tworzenie flagi dla załączników na podstawie flagi „FlagaDlaZalacznikow1”");
 $sel->type_ok("name", "FlagaDlaZalacznikow3");
 $sel->type_ok("description", "flagadlazalacznikow3");
 $sel->type_ok("sortkey", "800");
