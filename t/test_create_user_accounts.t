@@ -12,7 +12,7 @@ my ($sel, $config) = get_selenium();
 # Adresy e-mail dla nowych kont w bugzilli będą w domenie @bugzilla.test
 
 log_in($sel, $config, 'admin');
-set_parameters($sel, { "Uwierzytelnianie użytkowników" => {"createemailregexp" => {type => "text", value => '[^@]+@bugzilla\.test'}} });
+set_parameters($sel, { "Uwierzytelnianie użytkowników" => {"createemailregexp" => {type => "text", value => '[^@]+@bugzilla\.test$'}} });
 logout($sel);
 
 # Zakładanie konta. Dane użyte do adresu e-mail będą przypadkowe, 
@@ -46,10 +46,10 @@ $sel->click_ok("send");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Zbyt krótki okres pomiędzy prośbami o nowy token");
 my $error_msg = trim($sel->get_text("error_msg"));
-ok($error_msg =~ /Proszę odczekać chwilę i spróbować ponownie/, "Za wcześnie na zakładanie tego samego konta po raz drugi");
+ok($error_msg =~ /Proszę odczekać 10 minut i spróbować ponownie/, "Za wcześnie na zakładanie tego samego konta po raz drugi");
 
 # Konta z niewłaściwą domeną w adresie
-my @accounts = ('test@yahoo.com', 'test@bugzilla.net', 'test@bugzilla..test');
+my @accounts = ('test@yahoo.com', 'test@bugzilla.net', 'test@bugzilla.test.com');
 foreach my $account (@accounts) {
     $sel->click_ok("link=Nowe konto");
     $sel->wait_for_page_to_load_ok(WAIT_TIME);
@@ -62,7 +62,7 @@ foreach my $account (@accounts) {
 }
 
 # Nieprawidłowe adresy email
-@accounts = ('test\bugzilla@bugzilla.test', 'test@bugzilla.org@bugzilla.test');
+@accounts = ('test\bugzilla@bugzilla.test', 'test@bugzilla.org@bugzilla.test', 'test@bugzilla..test');
 foreach my $account (@accounts) {
     $sel->click_ok("link=Nowe konto");
     $sel->wait_for_page_to_load_ok(WAIT_TIME);
