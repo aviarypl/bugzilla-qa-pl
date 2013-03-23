@@ -154,12 +154,12 @@ $sel->click_ok("submit");
 $sel->wait_for_page_to_load(WAIT_TIME);
 $sel->title_is("Potwierdzenie zmiany relacji grupa/produkt dla „TestProduct”");
 # to trzeba zmienić po naprawieniu błędu 4272
-$sel->is_text_present_ok("jest ponownie obligatoryjna i zostanie dodana");
+$sel->is_text_present_ok("staje się obligatoryjna i zostanie dodana");
 $sel->click_ok("update");
 $sel->wait_for_page_to_load(WAIT_TIME);
 $sel->title_is("Aktualizacja grupy dla produktu „TestProduct”");
 # to też do zmiany po 4272
-$sel->is_text_present_ok('Dodawanie błędów do grupy „Selenium-test”, która jest ponownie obligatoryjna dla tego produktu');
+$sel->is_text_present_ok('Dodawanie błędów do grupy „Selenium-test”, która staje się obligatoryjna dla tego produktu');
 
 # All bugs being in TestProduct must now be restricted to the bug group.
 
