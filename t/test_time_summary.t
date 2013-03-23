@@ -84,11 +84,11 @@ go_to_bug($sel, $bug1_id);
 $sel->click_ok("//a[contains(text(),'Podsumowanie czasu')]");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 # Do poprawienie po naprawieniu krowy 4274
-$sel->title_is("Podsumowanie czasu dla Błąd nr $bug1_id");
+$sel->title_is("Podsumowanie czasu dla błędu nr $bug1_id");
 $sel->check_ok("inactive");
 $sel->check_ok("owner");
 $sel->click_ok("summarize");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 # Do poprawienie po naprawieniu krowy 4274
-$sel->title_is("Podsumowanie czasu dla Błąd nr $bug1_id");
+$sel->title_is("Podsumowanie czasu dla błędu nr $bug1_id");
 logout($sel);
