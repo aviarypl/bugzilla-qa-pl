@@ -245,7 +245,7 @@ my $flagtype2_id = $1;
 
 go_to_bug($sel, $bug2_id);
 $sel->select_ok("component", "label=c2");
-$sel->click_ok("set_default_assignee");
+ok(!$sel->is_checked("set_default_assignee"), "Moving the bug into another component must not change the assignee");
 $sel->type_ok("comment", "Flaga selenium powinna przetrwać.");
 edit_bug_and_return($sel, $bug2_id, $bug_summary2);
 $sel->selected_label_is("flag-$flag2_id", '?');
@@ -271,7 +271,7 @@ $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Weryfikacja danych o nowym produkcie…");
 edit_bug_and_return($sel, $bug2_id, $bug_summary2, {id => "change_product"});
 ok(!$sel->is_element_present("flag-$flag2_id"), "Flag $flag2_id deleted");
-ok(!$sel->is_editable("flag_type-$flagtype1_id"), "Flaga 'selenium' nie może być edytowana przez użytkowników bez uprawnień");
+ok(!$sel->is_element_present("flag_type-$flagtype1_id"), "Flaga 'selenium' nie może być wyświetlana przez użytkowników bez uprawnień");
 ok(!$sel->is_element_present("flag_type-$flagtype2_id"), "Typ flagi niedostępny w c1");
 logout($sel);
 

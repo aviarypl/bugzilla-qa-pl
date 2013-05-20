@@ -18,7 +18,10 @@ set_parameters($sel, { "Grupy zabezpieczeń" => {"makeproductgroups-on" => undef
 add_product($sel);
 $sel->type_ok("product", "gotowy_na_smierc");
 $sel->type_ok("description", "marnie zginiemy");
-$sel->click_ok('//input[@value="Dodaj"]');
+$sel->type_ok("component", "Główny");
+$sel->type_ok("comp_desc", "Brak konkretnej roli");
+$sel->type_ok("initialowner", $config->{permanent_user});
+$sel->click_ok('add-product');
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Utworzono produkt");
 go_to_admin($sel);
@@ -73,7 +76,10 @@ $sel->is_text_present_ok("Dostęp do błędów produktu gotowy_na_smierc");
 add_product($sel);
 $sel->type_ok("product", "gotowy_na_smierc_");
 $sel->type_ok("description", "marnie zginiemy");
-$sel->click_ok('//input[@value="Dodaj"]');
+$sel->type_ok("component", "Główny");
+$sel->type_ok("comp_desc", "Brak konkretnej roli");
+$sel->type_ok("initialowner", $config->{permanent_user});
+$sel->click_ok('add-product');
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Utworzono produkt");
 
@@ -153,7 +159,10 @@ set_parameters($sel, { "Grupy zabezpieczeń" => {"makeproductgroups-off" => unde
 add_product($sel);
 $sel->type_ok("product", "gotowy_na_smierc");
 $sel->type_ok("description", "marnie zginiemy");
-$sel->click_ok('//input[@value="Dodaj"]');
+$sel->type_ok("component", "Główny");
+$sel->type_ok("comp_desc", "Brak konkretnej roli");
+$sel->type_ok("initialowner", $config->{permanent_user});
+$sel->click_ok('add-product');
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Utworzono produkt");
 

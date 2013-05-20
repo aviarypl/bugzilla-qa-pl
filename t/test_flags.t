@@ -292,7 +292,7 @@ my $attachment1_id = $1;
 
 # Dodawanie kolejnego załacznika, i ustawianie pytającego.
 
-$sel->click_ok("//a[contains(text(),'Utwórz\n kolejny załącznik do błędu $bug1_id')]");
+$sel->click_ok("link=Utwórz kolejny załącznik do błędu $bug1_id");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Tworzenie załącznika do błędu #$bug1_id");
 $sel->type_ok("data", "/var/www/selenium/latka.diff");
@@ -314,7 +314,7 @@ my $attachment2_id = $1;
 
 # Dodawanie trzeciego załącznika. Tym razem typ zawartości wybieramy ręcznie.
 
-$sel->click_ok("//a[contains(text(),'Utwórz\n kolejny załącznik do błędu $bug1_id')]");
+$sel->click_ok("link=Utwórz kolejny załącznik do błędu $bug1_id");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Tworzenie załącznika do błędu #$bug1_id");
 $sel->type_ok("data", "/var/www/selenium/latka.diff");
@@ -387,8 +387,9 @@ $sel->value_is("ispatch", "off");
 $sel->value_is("autodetect", "on");
 
 # do edycji tego błędu wymagana jest przynależność do jednej z grup: canconfirm/editbugs.
+ok(!$sel->is_element_present("flag_type-$aflagtype1_id"), "Użytkownik bez uprawnień nie może edytować flagi 'SeleniumAttachmentFlag1Test'");
 
-ok(!$sel->is_editable("flag_type-$aflagtype1_id"), "Użytkownik bez uprawnień nie może edytować flagi");
+
 
 # Do zmiany tej flagi nie są potrzebne żadne uprawnienia.
 

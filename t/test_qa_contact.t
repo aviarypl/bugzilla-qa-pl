@@ -92,7 +92,7 @@ $sel->is_text_present_ok("Nie masz uprawnień dostępu do błędu");
 # powerless user, as the QA contact field is disabled.
 # Don't use it log_in() as we want to follow this specific link.
 
-$sel->click_ok("//a[contains(text(),'zalogować się\n    na konto')]", undef, "Log in");
+$sel->click_ok("link=zalogować się na konto", undef, "Log in");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Logowanie do Bugzilli");
 $sel->is_text_present_ok("Do zalogowania wymagana jest poprawna nazwa użytkownika (login) i hasło.");
