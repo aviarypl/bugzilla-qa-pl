@@ -22,8 +22,6 @@ $sel->check_ok("state_addselfcc-enabled");
 $sel->select_ok("state_addselfcc", "label=nigdy");
 $sel->check_ok("post_bug_submit_action-enabled");
 $sel->select_ok("post_bug_submit_action", "label=pokaż uaktualniony błąd");
-$sel->check_ok("per_bug_queries-enabled");
-$sel->select_ok("per_bug_queries", "label=włączone");
 $sel->uncheck_ok("zoom_textareas-enabled");
 $sel->select_ok("zoom_textareas", "label=wyłączone");
 $sel->click_ok("update");
@@ -38,7 +36,6 @@ $sel->title_is("Preferencje użytkownika");
 ok(!$sel->is_editable("skin"), "Nie można zmienić wyglądu Bugzilli");
 $sel->select_ok("state_addselfcc", "label=wartość domyślna (nigdy)");
 $sel->select_ok("post_bug_submit_action", "label=wartość domyślna (pokaż uaktualniony błąd)");
-$sel->select_ok("per_bug_queries", "label=wartość domyślna (włączone)");
 ok(!$sel->is_editable("zoom_textareas"), "Nie można zmienić opcji powiększania aktywnego pola tekstowego");
 $sel->click_ok("update");
 $sel->wait_for_page_to_load(WAIT_TIME);
@@ -54,6 +51,7 @@ $sel->type_ok("comment", "Nie ma mnie na liście obserwatorów.");
 my $bug1_id = create_bug($sel, $bug_summary);
 
 $sel->value_is("addselfcc", "off");
+$sel->type_ok("tag", "sel-tmp");
 $sel->select_ok("bug_status", "label=W REALIZACJI");
 edit_bug($sel, $bug1_id, $bug_summary);
 $sel->click_ok("editme_action");
@@ -62,25 +60,20 @@ $sel->value_is("addselfcc", "off");
 
 # Tag the bug and add it to a saved search.
 
-$sel->select_ok("lob_action", "label=Dodaj");
-$sel->type_ok("lob_newqueryname", "sel-tmp");
-$sel->type_ok("bug_ids", $bug1_id);
-$sel->click_ok("commit_list_of_bugs");
-$sel->wait_for_page_to_load(WAIT_TIME);
-$sel->title_is("Etykieta zaktualizowana");
-$sel->is_text_present_ok("Etykieta „sel-tmp” została dodana do błędu $bug1_id");
-$sel->click_ok("link=sel-tmp");
-$sel->wait_for_page_to_load(WAIT_TIME);
+$sel->type_ok("quicksearch_top", "tag:sel-tmp");
+$sel->click_ok("find_top");
+$sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Lista błędów");
 $sel->type_ok("save_newqueryname", "sel-tmp");
 $sel->click_ok("remember");
 $sel->wait_for_page_to_load(WAIT_TIME);
 $sel->title_is("Utworzono wyszukiwanie");
 $sel->is_text_present_ok("Masz nowe wyszukiwanie o nazwie sel-tmp");
+
 # Leave this page to avoid clicking on the wrong 'sel-tmp' link.
 go_to_home($sel, $config);
 $sel->click_ok("link=sel-tmp");
-$sel->wait_for_page_to_load(WAIT_TIME);
+$sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Lista błędów: sel-tmp");
 $sel->is_text_present_ok("Znaleziono jeden błąd");
 
@@ -93,18 +86,9 @@ $sel->type_ok("short_desc", $bug_summary2);
 $sel->type_ok("comment", "Nadal mnie nie ma na liście obserwatorów");
 my $bug2_id = create_bug($sel, $bug_summary2);
 $sel->value_is("addselfcc", "off");
+$sel->type_ok("tag", "sel-tmp");
+edit_bug($sel, $bug2_id, $bug_summary2);
 
-# Update the saved search.
-
-$sel->select_ok("lob_action", "label=Dodaj");
-$sel->select_ok("lob_oldqueryname", "label=sel-tmp");
-$sel->type_ok("bug_ids", $bug2_id);
-$sel->click_ok("commit_list_of_bugs");
-$sel->wait_for_page_to_load(WAIT_TIME);
-$sel->title_is("Etykieta zaktualizowana");
-$sel->is_text_present_ok("Etykieta „sel-tmp” została dodana do błędu $bug2_id");
-# Leave this page to avoid clicking on the wrong 'sel-tmp' link.
-go_to_home($sel, $config);
 $sel->click_ok("link=sel-tmp");
 $sel->wait_for_page_to_load(WAIT_TIME);
 $sel->title_is("Lista błędów: sel-tmp");
@@ -127,12 +111,28 @@ $sel->click_ok("link=Usuń wyszukiwanie „sel-tmp”");
 $sel->wait_for_page_to_load(WAIT_TIME);
 $sel->title_is("Usuwanie wyszukiwania");
 $sel->is_text_present_ok("Wyszukiwanie sel-tmp zostało usunięte");
-$sel->select_ok("lob_action", "label=Usuń");
-$sel->type_ok("bug_ids", "$bug1_id, $bug2_id");
-$sel->click_ok("commit_list_of_bugs");
-$sel->wait_for_page_to_load(WAIT_TIME);
-$sel->title_is("Etykieta zaktualizowana");
-$sel->is_text_present_ok("Etykieta „sel-tmp” została usunięta z błędów $bug1_id, $bug2_id");
+
+# Remove the tag from bugs.
+
+$sel->type_ok("quicksearch_top", "tag:sel-tmp");
+$sel->click_ok("find_top");
+$sel->wait_for_page_to_load_ok(WAIT_TIME);
+$sel->title_is("Lista błędów");
+$sel->is_text_present_ok("Znaleziono 2 błędy");
+# We cannot remove tags from several bugs at once (bug 791584).
+go_to_bug($sel, $bug1_id);
+$sel->type_ok("tag", "");
+edit_bug($sel, $bug1_id, $bug_summary);
+
+go_to_bug($sel, $bug2_id);
+$sel->type_ok("tag", "");
+edit_bug($sel, $bug2_id, $bug_summary2);
+
+$sel->type_ok("quicksearch_top", "tag:sel-tmp");
+$sel->click_ok("find_top");
+$sel->wait_for_page_to_load_ok(WAIT_TIME);
+$sel->title_is("Lista błędów");
+$sel->is_text_present_ok("Nie znaleziono żadnych");
 logout($sel);
 
 # Edit own user preferences, now as an unprivileged user.
@@ -144,15 +144,10 @@ $sel->title_is("Preferencje użytkownika");
 ok(!$sel->is_editable("skin"), "Nie można zmienić wyglądu Bugzilli");
 $sel->select_ok("state_addselfcc", "label=zawsze");
 $sel->select_ok("post_bug_submit_action", "label=pokaż następny błąd na liście");
-$sel->select_ok("per_bug_queries", "label=wyłączone");
 ok(!$sel->is_editable("zoom_textareas"), "Nie można zmienić opcji powiększania aktywnego pola tekstowego");
 $sel->click_ok("update");
 $sel->wait_for_page_to_load(WAIT_TIME);
 $sel->title_is("Preferencje użytkownika");
-
-ok(!$sel->is_element_present("lob_action"), "Element 1 z 3 dla etykiet jest niewidoczny");
-ok(!$sel->is_element_present("lob_newqueryname"), "Element 2 z 3 dla etykiet jest niewidoczny");
-ok(!$sel->is_element_present("commit_list_of_bugs"), "Element 3 z 3 dla etykiet jest niewidoczny");
 
 # Create a new search named 'moja_lista'.
 

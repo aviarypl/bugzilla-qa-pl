@@ -60,6 +60,12 @@ $sel->click_ok("email-0-0", undef, 'Wybór opcji "Nastąpiła zmiana w polu tuta
 $sel->click_ok("email-3-8", undef, 'Wybór opcji "Nastąpiła zmiana na liście obserwatorów " dla roli "Obserwator"');
 $sel->click_ok("email-1-10", undef, 'Wybór opcji "Został zgłoszony nowy błąd " dla roli "Specjalista QA"');
 $sel->click_ok("email-100-101", undef, 'Wybór opcji "Powiadamiaj, gdy ktoś odpowiedział na umieszczoną przeze mnie flagę" w ustawieniach globalnych');
+# Przywrócenie zachowania z wersji 4.2 dla opcji 'Wyłącz wszystko'.
+foreach my $col (0..3) {
+    foreach my $row (50..51) {
+        $sel->click_ok("neg-email-$col-$row");
+    }
+}
 $sel->value_is("email-0-1", "on");
 $sel->value_is("email-0-10", "off");
 $sel->value_is("email-0-6", "off");

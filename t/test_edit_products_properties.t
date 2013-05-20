@@ -53,25 +53,18 @@ if ($config->{test_extensions}) {
     $sel->type_ok("votestoconfirm", "10");
 }
 $sel->type_ok("version", "0.1a");
-$sel->click_ok("//input[\@value='Dodaj']");
-$sel->wait_for_page_to_load_ok(WAIT_TIME);
-$text = trim($sel->get_text("message"));
-ok($text =~ /Należy dodać co najmniej jeden komponent, zanim ktokolwiek będzie mógł zgłaszać błędy w tym produkcie/,
-   "Przypominacz o brakujących komponentach");
-$sel->click_ok("link=dodać co najmniej jeden komponent");
-$sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Dodawanie komponentu do produktu „Zabij mnie”");
 $sel->type_ok("component", "komponent pierwszy");
-$sel->type_ok("description", "komp 1");
+$sel->type_ok("comp_desc", "komp 1");
 $sel->type_ok("initialowner", $admin_user_login);
-$sel->click_ok("create");
+$sel->click_ok("add-product");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
-$sel->title_is("Utworzono komponent");
-$text = trim($sel->get_text("message"));
-ok($text eq 'Komponent komponent pierwszy został utworzony.', "Utworzono komponent");
+$sel->title_is("Utworzono produkt");
 
 # Próba utworzenia kolejnego komponentu o tej samej nazwie.
 
+$sel->click_ok("link=Modyfikuj komponenty:");
+$sel->wait_for_page_to_load_ok(WAIT_TIME);
+$sel->title_is("Modyfikowanie komponentów produktu „Zabij mnie”");
 $sel->click_ok("link=Dodaj nowy komponent do produktu „Zabij mnie”");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Dodawanie komponentu do produktu „Zabij mnie”");
@@ -97,7 +90,7 @@ $sel->title_is("Utworzono komponent");
 # Dodawanie nowej wersji.
 
 edit_product($sel, "Zabij mnie");
-$sel->click_ok("//a[contains(text(),'Modyfikuj\nwersje:')]");
+$sel->click_ok("link=Modyfikuj wersje:");
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Modyfikowanie wersji produktu „Zabij mnie”");
 $sel->click_ok("link=Dodaj wersję");
