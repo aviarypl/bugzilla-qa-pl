@@ -78,7 +78,8 @@ foreach my $user ('', 'unprivileged') {
 $sel->click_ok('//a[@href="attachment.cgi?id=' . $attachment1_id . '&action=edit"]');
 $sel->wait_for_page_to_load_ok(WAIT_TIME);
 $sel->title_is("Szczegóły załącznika $attachment1_id do błędu $bug1_id");
-$sel->is_text_present_ok("utworzony przez admin");
+$sel->is_text_present_ok("utworzony");
+$sel->is_text_present_ok("przez admin");
 $sel->type_ok("comment", "This attachment is not mine.");
 edit_bug($sel, $bug1_id, $bug_summary, {id => "update"});
 $sel->is_text_present_ok("This attachment is not mine");
@@ -93,7 +94,7 @@ $sel->title_like(qr/^Tworzenie/);
 $sel->type_ok("data", "/var/www/selenium/latka.diff");
 $sel->check_ok("ispatch");
 # The user doesn't have editbugs privs.
-$sel->is_text_present_ok("[brak załączników do zdezaktualizowania]");
+ok(!$sel->is_text_present("Zaznacz załączniki, które zostaną zdezaktualizowane po dodaniu nowego załącznika"), "Brak załączników do zdezaktualizowania");
 $sel->type_ok("description", "My patch, which I should see, always");
 $sel->type_ok("comment", "This is my patch!");
 edit_bug($sel, $bug1_id, $bug_summary, {id => "create"});
